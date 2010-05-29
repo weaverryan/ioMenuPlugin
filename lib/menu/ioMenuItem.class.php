@@ -45,7 +45,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   /**
    * Class constructor
    * 
-   * 
    * @param string $name    The name of this menu, which is how its parent will
    *                        reference it. Also used as label if label not specified
    * @param string $route   The route/url for this menu to use. If not specified,
@@ -517,14 +516,59 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
-   * Called by the parent menu item to render this menu.
-   * 
-   * This renders the li tag to fit into the parent ul as well as its
-   * own nested ul tag if this menu item has children
-   * 
+   * Renders a ul tag and any children inside li tags.
+   *
+   * If this is being rendered as root, it means that it is acting as the
+   * top level menu item (it may not actually be the root menu item if
+   * only a subset of the menu is being rendered). In that case, we output
+   * the attributes on the ul, since the li won't be output.
+   *
+   * @param boolean $renderAsRoot Whether or not this is being rendered
+   *                              as the top-level item.
    * @return string
    */
-  public function render()
+  public function render($renderAsRoot = true)
+  {
+    if ($renderAsRoot)
+    {
+      $attributes = $this->getAttributes();
+    }
+    else
+    {
+      $attributes = array('class' => 'menu_level_'.$this->getLevel());
+    }
+
+    return content_tag('ul', $this->renderChildren(), $attributes);
+  }
+
+  /**
+   * Renders all of the children of this menu.
+   *
+   * This calls ->renderChild() on each menu item, which instructs each
+   * menu item to render themselves as an <li> tag (with nested ul if it
+   * has children).
+   *
+   * @return string
+   */
+  public function renderChildren()
+  {
+    $html = '';
+    foreach ($this->_children as $child)
+    {
+      $html .= $child->renderChild();
+    }
+    return $html;
+  }
+
+  /**
+   * Called by the parent menu item to render this menu.
+   *
+   * This renders the li tag to fit into the parent ul as well as its
+   * own nested ul tag if this menu item has children
+   *
+   * @return string
+   */
+  public function renderChild()
   {
     if ($this->checkUserAccess())
     {
@@ -562,31 +606,11 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       // if we have visible children, render them in a ul tag
       if ($this->hasChildren() && $this->showChildren())
       {
-        $innerHtml .= content_tag(
-          'ul',
-          $this->renderChildren(),
-          ($this->getLevel() > 0) ? array('class' => 'menu_level_'.$this->getLevel()) : array()
-        );
+        $innerHtml .= $this->render(false);
       }
 
       return content_tag('li', $innerHtml, $attributes);
     }
-  }
-
-  /**
-   * Renders all of the children of this menu, which equates to a group
-   * of li tags
-   *
-   * @return string
-   */
-  public function renderChildren()
-  {
-    $html = '';
-    foreach ($this->_children as $child)
-    {
-      $html .= $child->render();
-    }
-    return $html;
   }
 
   /**

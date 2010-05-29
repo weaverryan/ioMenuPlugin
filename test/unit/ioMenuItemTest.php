@@ -304,25 +304,29 @@ $t->info('6 - Test the url, link, label rendering');
 $t->info('7 - Test the render() method.');
 
   $t->info('  7.1 - Render the menu in a few basic ways');
-  $rendered = '<li class="root">root<ul><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="last">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul></li>';
+  $rendered = '<ul class="root"><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="last">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
   $t->is($menu->render(), $rendered, 'The full menu renders correctly.');
 
   $t->info('  7.2 - Set a title and class on pt2, and see that it renders.');
   $pt2->setAttribute('class', 'parent2_class');
   $pt2->setAttribute('title', 'parent2 title');
-  $rendered = '<li class="root">root<ul><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul></li>';
+  $rendered = '<ul class="root"><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
   $t->is($menu->render(), $rendered, 'The menu renders with the title and class attributes.');
 
   $t->info('  7.3 - Set ch2 menu as current, look for "current" and "current_ancestor" classes.');
   $ch2->isCurrent(true);
-  $rendered = '<li class="root current_ancestor">root<ul><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul></li>';
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
   $t->is($menu->render(), $rendered, 'The menu renders with the current and current_ancestor classes.');
 
   $t->info('  7.4 - Make ch4 hidden due to not having proper credentials');
   $ch4->requiresAuth(true);
-  $rendered = '<li class="root current_ancestor">root<ul><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul></li>';
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul>';
   $t->is($menu->render(), $rendered, 'The menu renders, but ch4 and children are not shown.');
-  
+  $ch4->requiresAuth(false); // fix ch4
+
+  $t->info('  7.5 - Only render a submenu portion');
+  $rendered = '<ul class="parent2_class" title="parent2 title"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul>';
+  $t->is($menu['Parent 2']->render(), $rendered, 'The pt2 menu renders as a ul with the correct classes and its children beneath.');  
 
 // prints a visual representation of our basic testing tree
 function print_test_tree(lime_test $t)

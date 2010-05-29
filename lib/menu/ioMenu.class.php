@@ -38,15 +38,4 @@ class ioMenu extends ioMenuItem
 
     return new $class($name, $route, $options);
   }
-
-  /**
-   * Overridden so that only the child li elements, wrapped by a ul tag
-   * with the proper attributes, is output.
-   *
-   * @return string
-   */
-  public function render()
-  {
-    return content_tag('ul', $this->renderChildren(), $this->getAttributes());
-  }
 }
