@@ -26,6 +26,7 @@ all:
   .settings:
     # Form security secret (CSRF protection)
     csrf_secret:            ioMenuPlugin
+    i18n:                   true
 
     # Output escaping settings
     escaping_strategy:      on

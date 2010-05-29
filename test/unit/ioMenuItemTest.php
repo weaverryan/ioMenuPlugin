@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(10);
+$t = new lime_test(126);
 
 // stub class used for testing
 class ioMenuItemTest extends ioMenuItem
@@ -266,18 +266,75 @@ $t->info('5 - Check the "current" behavior.');
   $t->is($currentMenu['child']->isCurrentAncestor(), true, '->isCurrentAncestor() returns true on the child since its child is current.');
   
 
+$t->info('6 - Test the url, link, label rendering');
+  check_test_tree($t, $menu);
+  print_test_tree($t);
+
+  $t->info('  6.1 - Test the getUri() method');
+  $t->is($menu->getUri(), null, '->getUri() returns null when no route is set.');
+  $menu->setRoute('http://www.sympalphp.org');
+  $t->is($menu->getUri(), 'http://www.sympalphp.org', '->getUri() returns the raw url for an absolute route.');
+  $menu->setRoute('@homepage');
+  $t->is($menu->getUri(), url_for('@homepage'), '->getUri() returns the real url of a symfony route.');
+  $t->info('    Using a bad route should throw the normal exception, with added text.');
+  $menu->setRoute('@fake_route');
+  try
+  {
+    $menu->getUri();
+    $t->fail('Exception not thrown.');
+  }
+  catch (sfConfigurationException $e)
+  {
+    $t->pass('Exception thrown.');
+  }
+
+  $t->info('  6.2 - Test the basic rendering functions, renderLabel(), renderLink()');
+  $t->is($menu->renderLabel(), 'Root li', '->renderLabel() on rt returns "Root li", its name');
+  $menu->setLabel('root');
+  $t->is($menu->renderLabel(), 'root', '->renderLabel() on rt returns "root" after setting the label');
+
+  $menu->setRoute(null);
+  $t->is($menu->renderLink(), $menu->renderLabel(), '->renderLink() == renderLabel() on rt because no route is set.');
+  $menu->setRoute('http://www.google.com');
+  $t->is($menu->renderLink(), '<a href="http://www.google.com">root</a>', '->renderLink() returns the correct link tag for an absolute url route.');
+  $menu->setRoute('@homepage');
+  $t->is($menu->renderLink(), '<a href="'.url_for('@homepage').'">root</a>', '->renderLink() returns the correct link tag for true symfony route.');
+  $menu->setRoute(null); // set it back to null
+
+$t->info('7 - Test the render() method.');
+
+  $t->info('  7.1 - Render the menu in a few basic ways');
+  $rendered = '<li class="root">root<ul><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="last">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul></li>';
+  $t->is($menu->render(), $rendered, 'The full menu renders correctly.');
+
+  $t->info('  7.2 - Set a title and class on pt2, and see that it renders.');
+  $pt2->setAttribute('class', 'parent2_class');
+  $pt2->setAttribute('title', 'parent2 title');
+  $rendered = '<li class="root">root<ul><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul></li>';
+  $t->is($menu->render(), $rendered, 'The menu renders with the title and class attributes.');
+
+  $t->info('  7.3 - Set ch2 menu as current, look for "current" and "current_ancestor" classes.');
+  $ch2->isCurrent(true);
+  $rendered = '<li class="root current_ancestor">root<ul><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul></li>';
+  $t->is($menu->render(), $rendered, 'The menu renders with the current and current_ancestor classes.');
+
+  $t->info('  7.4 - Make ch4 hidden due to not having proper credentials');
+  $ch4->requiresAuth(true);
+  $rendered = '<li class="root current_ancestor">root<ul><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul></li>';
+  $t->is($menu->render(), $rendered, 'The menu renders, but ch4 and children are not shown.');
+  
 
 // prints a visual representation of our basic testing tree
 function print_test_tree(lime_test $t)
 {
-  $t->info('Menu Structure');
-  $t->info('        rt       ');
-  $t->info('      /      \   ');
-  $t->info('    pt1      pt2 ');
-  $t->info('  /  | \      |  ');
-  $t->info('ch1 ch2 ch3  ch4 ');
-  $t->info('              |  ');
-  $t->info('             gc1 ');
+  $t->info('      Menu Structure   ');
+  $t->info('               rt      ');
+  $t->info('             /    \    ');
+  $t->info('          pt1      pt2 ');
+  $t->info('        /  | \      |  ');
+  $t->info('      ch1 ch2 ch3  ch4 ');
+  $t->info('                    |  ');
+  $t->info('                   gc1 ');
 }
 
 // runs basic checks on the test tree to make sure it has its integrity

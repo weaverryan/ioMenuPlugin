@@ -18,4 +18,4 @@ register_shutdown_function('ioMenuPlugin_cleanup');
 
 require_once dirname(__FILE__).'/../fixtures/project/config/ProjectConfiguration.class.php';
 $configuration = ProjectConfiguration::getApplicationConfiguration($app, 'test', isset($debug) ? $debug : true);
-sfContext::createInstance($configuration);
+$context = sfContext::createInstance($configuration);

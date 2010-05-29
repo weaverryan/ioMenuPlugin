@@ -64,27 +64,25 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   /**
    * Generates the url to this menu item based on the route
    * 
-   * In case the route is totally invalid, this catches the exception
-   * and sends to the raw string
-   * 
-   * @TODO Find a more explicit way to log if the route is invalid
-   * 
    * @param array $options Options to pass to the url_for method
    */
-  public function getUrl(array $options = array())
+  public function getUri(array $options = array())
   {
+    if (!$this->getRoute())
+    {
+      return null;
+    }
+
     try
     {
       return url_for($this->getRoute(), $options);
     }
     catch (sfConfigurationException $e)
     {
-      sfApplicationConfiguration::getActive()->getEventDispatcher()->notify(
-        new sfEvent($this, 'application.log', array(
-          sprintf('Cannot generate a menu url for "%s"', $this->getRoute())
-        ))
+      throw new sfConfigurationException(
+        sprintf('Problem with menu item "%s": %s', $this->getLabel(), $e->getMessage())
       );
-      
+
       return $this->getRoute();
     }
   }
@@ -115,6 +113,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   {
     return $this->_route;
   }
+
 
   /**
    * Sets the route/url for a menu item
@@ -518,21 +517,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
-   * @return string
-   */
-  public function __toString()
-  {
-    try
-    {
-      return (string) $this->render();
-    }
-    catch (Exception $e)
-    {
-      return $e->getMessage();
-    }
-  }
-
-  /**
    * Called by the parent menu item to render this menu.
    * 
    * This renders the li tag to fit into the parent ul as well as its
@@ -545,7 +529,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     if ($this->checkUserAccess())
     {
       // explode the class string into an array of classes
-      $class = explode(' ', $this->getAttribute('class'));
+      $class = ($this->getAttribute('class')) ? explode(' ', $this->getAttribute('class')) : array();
 
       if ($this->isCurrent())
       {
@@ -567,7 +551,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
       // retrieve the attributes and put the final class string back on it
       $attributes = $this->getAttributes();
-      $attributes['class'] = implode(' ', $class);
+      if (count($class) > 0)
+      {
+        $attributes['class'] = implode(' ', $class);
+      }
 
       // render the text/link inside the li tag
       $innerHtml = $this->_route ? $this->renderLink() : $this->renderLabel();
@@ -578,7 +565,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
         $innerHtml .= content_tag(
           'ul',
           $this->renderChildren(),
-          array('class' => 'menu_level_'.$this->getLevel())
+          ($this->getLevel() > 0) ? array('class' => 'menu_level_'.$this->getLevel()) : array()
         );
       }
 
@@ -617,21 +604,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       return $this->renderLabel();
     }
 
-    // protected against an invalid url (e.g. myModule/myAction, which doesn't exist)
-    try
-    {
-      return link_to($this->renderLabel(), $route, array());
-    }
-    catch (sfConfigurationException $e)
-    {
-      sfApplicationConfiguration::getActive()->getEventDispatcher()->notify(
-        new sfEvent($this, 'application.log', array(
-          sprintf('Cannot generate a menu url for "%s"', $this->getRoute())
-        ))
-      );
-
-      return $this->renderLabel();
-    }
+    return content_tag('a', $this->renderLabel(), array('href' => $this->getUri()));
   }
 
   /**
@@ -693,7 +666,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     if ($this->_isCurrent === null)
     {
       $url = $this->getCurrentUri();
-      $this->_isCurrent = ($this->getUrl(array('absolute' => true)) == $url);
+      $this->_isCurrent = ($this->getUri(array('absolute' => true)) == $url);
     }
 
     return $this->_isCurrent;
@@ -722,7 +695,13 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function isLast()
   {
-    return $this->getNum() == $this->getParent()->count() ? true:false;
+    // if this is root, then return false
+    if (!$this->getParent())
+    {
+      return false;
+    }
+
+    return $this->getNum() == $this->getParent()->count() ? true : false;
   }
 
   /**
@@ -730,6 +709,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function isFirst()
   {
+    // if this is root, then return false
+    if (!$this->getParent())
+    {
+      return false;
+    }
+
     return ($this->getNum() == 1);
   }
 
@@ -918,27 +903,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     } while ($obj = $obj->getParent());
 
     return implode(' > ', array_reverse($children));
-  }
-
-  /**
-   * Calls a given method recursively on this menu item and all of its children
-   *
-   * @return ioMenuItem
-   */
-  public function callRecursively()
-  {
-    $args = func_get_args();
-    $arguments = $args;
-    unset($arguments[0]);
-
-    call_user_func_array(array($this, $args[0]), $arguments);
-
-    foreach ($this->_children as $child)
-    {
-      call_user_func_array(array($child, 'callRecursively'), $args);
-    }
-
-    return $this;
   }
 
   /**
