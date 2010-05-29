@@ -314,22 +314,6 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
   $t->is($otherMenu['child']->getLabel(), 'changed', 'The label was changed on the child.');
   $t->is($otherMenu['child']['grandchild']->getLabel(), 'changed', 'The label was changed on the grandchild.');
 
-  $t->info('  7.2 - Test setDepth()');
-  $t->info('    a) Set a high depth, has no effect.');
-  $otherMenu->setDepth(10);
-  $t->is($otherMenu->showChildren(), true, 'The root still shows children.');
-  $t->is($otherMenu['child']->showChildren(), true, 'The child still shows children.');
-  $t->is($otherMenu['child']['grandchild']->showChildren(), true, 'The grandchild still shows children.');
-
-  $t->info('    b) Set a depth of 0, children are hidden at the top level.');
-  $otherMenu->setDepth(0);
-  $t->is($otherMenu->showChildren(), false, 'The root hides its children.');
-
-  $t->info('    c) Set a depth of 1, only children are shown');
-  $otherMenu->setDepth(1);
-  $t->is($otherMenu->showChildren(), true, 'The root shows its children.');
-  $t->is($otherMenu['child']->showChildren(), false, 'The child hides its children.');
-
 $t->info('8 - Test the render() method.');
   check_test_tree($t, $menu);
   print_test_tree($t);
@@ -360,12 +344,32 @@ $t->info('8 - Test the render() method.');
   $t->is($menu['Parent 2']->render(), $rendered, 'The pt2 menu renders as a ul with the correct classes and its children beneath.');
 
   $t->info('  8.6 - Test showChildren() functionality.');
-  $menu['Parent 1']->showChildren(false);
-  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
-  $menu['Parent 1']->showChildren(true); // replace the setting
 
   $menu->showChildren(false);
   $t->is($menu->render(), '', '->showChildren(false) at the root renders a blank string.');
+  $menu->showChildren(true); // replace the setting
+
+  $menu['Parent 1']->showChildren(false);
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
+  $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children.');
+  $menu['Parent 1']->showChildren(true); // replace the setting
+
+  $t->info('  8.7 - Test the depth argument on ->render()');
+  $t->is($menu->render(0), '', '->render(0) returns an empty string.');
+
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul>';
+  $t->is($menu->render(1), $rendered, '->render(1) returns only the pt1 and pt2 elements');
+
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4</li></ul></li></ul>';
+  $t->is($menu->render(2), $rendered, '->render(2) returns down to the ch1-ch4 level.');
+
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
+  $t->is($menu->render(3), $rendered, '->render(3) returns the entire tree.');
+
+  $t->info('    Use render(2) but set pt1\'s showChildren() to false.');
+  $menu['Parent 1']->showChildren(false);
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4</li></ul></li></ul>';
+  $t->is($menu->render(2), $rendered, 'Displays ch4 and not gc1 because depth = 2. Hides ch1-3 because showChildren() is false on pt1.');
 
 // prints a visual representation of our basic testing tree
 function print_test_tree(lime_test $t)

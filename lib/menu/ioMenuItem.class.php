@@ -253,12 +253,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   {
     return $this->_credentials;
   }
-  
+
   /**
    * Returns and optionally sets whether or not this menu item should
    * show its children. If the $bool argument is passed, the _showChildren
    * property will be set
-   * 
+   *
    * @param boolean $bool Whether to show children or not
    */
   public function showChildren($bool = null)
@@ -270,6 +270,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
     return $this->_showChildren;
   }
+
 
   /**
    * Add a child menu item to this menu
@@ -532,63 +533,44 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
-   * Sets the depth of menu items to render.
+   * Renders a ul tag and any children inside li tags.
    *
-   *   * 0 - no children
+   * Depth values corresppond to:
+   *   * 0 - no children displayed at all (would return a blank string)
    *   * 1 - directly children only
    *   * 2 - children and grandchildren
    *
-   * @param  integer $depth The depth of menus to return
-   * @return void
-   */
-  public function setDepth($depth)
-  {
-    if ($depth == 0)
-    {
-      // hide the children and be done with it
-      $this->showChildren(false);
-    }
-    else
-    {
-      // show the children and set depth-1 on the children
-      $this->showChildren(true);
-      foreach ($this->getChildren() as $child)
-      {
-        $child->setDepth($depth - 1);
-      }
-    }
-  }
-
-  /**
-   * Renders a ul tag and any children inside li tags.
-   *
-   * If this is being rendered as root, it means that it is acting as the
-   * top level menu item (it may not actually be the root menu item if
-   * only a subset of the menu is being rendered). In that case, we output
-   * the attributes on the ul, since the li won't be output.
-   *
-   * @param boolean $renderAsRoot Whether or not this is being rendered
-   *                              as the top-level item.
+   * @param integer $depth         The depth of children to render 
+   * @param boolean $renderAsChild Used internally to render with attributes on the write element
+   * 
    * @return string
    */
-  public function render($renderAsRoot = true)
+  public function render($depth = null, $renderAsChild = false)
   {
-    // if we don't render children, render nothing
-    if (!$this->hasChildren() || !$this->showChildren())
+    /**
+     * Return an empty string if any of the following are true:
+     *   a) The menu has no children eligible to be displayed
+     *   b) The depth is 0
+     *   c) This menu item has been explicitly set to hide its children
+     */
+    if (!$this->hasChildren() || $depth === 0 || !$this->showChildren())
     {
       return;
     }
 
-    if ($renderAsRoot)
-    {
-      $attributes = $this->getAttributes();
-    }
-    else
+    if ($renderAsChild)
     {
       $attributes = array('class' => 'menu_level_'.$this->getLevel());
     }
+    else
+    {
+      $attributes = $this->getAttributes();
+    }
 
-    return content_tag('ul', $this->renderChildren(), $attributes);
+    // render children with a depth - 1
+    $childDepth = ($depth === null) ? null : ($depth - 1);
+
+    return content_tag('ul', $this->renderChildren($childDepth), $attributes);
   }
 
   /**
@@ -598,14 +580,15 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * menu item to render themselves as an <li> tag (with nested ul if it
    * has children).
    *
+   * @param integer $depth The depth each child should render
    * @return string
    */
-  public function renderChildren()
+  public function renderChildren($depth = null)
   {  
     $html = '';
     foreach ($this->_children as $child)
     {
-      $html .= $child->renderChild();
+      $html .= $child->renderChild($depth);
     }
     return $html;
   }
@@ -616,9 +599,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * This renders the li tag to fit into the parent ul as well as its
    * own nested ul tag if this menu item has children
    *
+   * @param integer $depth The depth each child should render
    * @return string
    */
-  public function renderChild()
+  public function renderChild($depth = null)
   {
     if ($this->checkUserAccess())
     {
@@ -654,7 +638,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $innerHtml = $this->_route ? $this->renderLink() : $this->renderLabel();
 
       // renders the embedded ul if there are visible children
-      $innerHtml .= $this->render(false);
+      $innerHtml .= $this->render($depth, true);
 
       return content_tag('li', $innerHtml, $attributes);
     }
