@@ -291,6 +291,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
     $child->setParent($this);
     $child->showChildren($this->showChildren());
+    $child->setCurrentUri($this->getCurrentUri());
     $child->setNum($this->count() + 1);
 
     $this->_children[$child->getName()] = $child;
@@ -707,7 +708,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   {
     foreach ($this->getChildren() as $child)
     {
-      if ($child->isCurrent())
+      if ($child->isCurrent() || $child->isCurrentAncestor())
       {
         return true;
       }
@@ -736,8 +737,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * Returns the current uri, which is used for determining the current
    * menu item.
    *
-   * If the uri isn't set, this asks the root menu for the uri and if it
-   * is the root, it gets it from the request object
+   * If the uri isn't set, this asks the parent menu for its current uri.
+   * This would recurse up the tree until the root is hit. Once the root
+   * is hit, if it still doesn't know the currentUri, it gets it from the
+   * request object.
    *
    * @return string
    */
@@ -745,13 +748,30 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   {
     if ($this->_currentUri === null)
     {
-      if ($this->getRoot())
+      if ($this->getParent() && ($currentUri = $this->getParent()->getCurrentUri()))
       {
-        $this->_currentUri = $this->getRoot()->getUri();
+        /**
+         * This should look strange. But, if we ask our parent for the
+         * current uri, and it returns it successfully, then one of two
+         * different things just happened:
+         * 
+         *   1) The parent already had the currentUri calculated, but it
+         *      hadn't been passed down to the child yet. This technically
+         *      should not happen, but we allow for the possibility. In
+         *      that case, _currentUri is still blank and we set it here.
+         *   2) The parent did not have the currentUri calculated, and upon
+         *      calculating it, it set it on itself and all of its children.
+         *      In that case, this menu item and all of its children will
+         *      now have the currentUri just by asking the parent.
+         */
+        if ($this->_currentUri === null)
+        {
+          $this->setCurrentUri($currentUri);
+        }
       }
       else
       {
-        $this->_currentUri = sfContext::getInstance()->getRequest()->getUri();
+        $this->setCurrentUri(sfContext::getInstance()->getRequest()->getUri());
       }
     }
 
@@ -770,9 +790,9 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   {
     $this->_currentUri = $uri;
 
-    if ($this->getRoot())
+    foreach ($this->getChildren() as $child)
     {
-      $this->getRoot()->setCurrentUri($uri);
+      $child->setCurrentUri($uri);
     }
   }
 

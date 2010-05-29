@@ -5,7 +5,15 @@ require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
 $t = new lime_test(10);
 
-class ioMenuItemTest extends ioMenuItem {} // stub class used for testing
+// stub class used for testing
+class ioMenuItemTest extends ioMenuItem
+{
+  // resets the current property so we can test for current repeatedly.
+  public function resetIsCurrent()
+  {
+    $this->_isCurrent = null;
+  }
+}
 
 $t->info('1 - Test basic getters, setters and constructor');
   $menu = new ioMenuItem('test menu', '@homepage', array('title' => 'my menu'));
@@ -95,6 +103,11 @@ $t->info('2 - Test the construction of trees');
   $t->is($menu->getRoot(), $menu, '->getRoot() on rt returns itself.');
   $t->is($pt1->getRoot(), $menu, '->getRoot() on pt1 returns rt.');
   $t->is($gc1->getRoot(), $menu, '->getRoot() on gc1 returns rt.');
+
+  $t->is($menu->getParent(), null, '->getParent() on rt returns null - it has no parent.');
+  $t->is($pt1->getParent(), $menu, '->getParent() on pt1 returns rt.');
+  $t->is($gc1->getParent(), $ch4, '->getParent() on gc1 returns ch4.');
+
   //$t->is($gc1->getPathAsString(), 'Root li > pt2 > ch4 > gc1', 'Test getPathAsString() on gc1');
 
   // positional functions
@@ -210,9 +223,48 @@ $t->info('4 - Check the credentials and security functions.');
 
 
 $t->info('5 - Check the "current" behavior.');
-  $currentMenu = new ioMenuItem('root');
-  $currentMenu->setCurrentUri('http://www.sympalphp.org');
+  $currentMenu = new ioMenuItemTest('root');
+  $currentMenu->addChild('child', 'http://www.symfony-project.org');
 
+  $t->info('  5.1 - Test the setting of the current uri.');
+  $currentMenu->setCurrentUri('http://www.symfony-project.org');
+  $t->is($currentMenu->getCurrentUri(), 'http://www.symfony-project.org', '->setCurrentUri() sets the current uri correctly.');
+  $t->is($currentMenu['child']->getCurrentUri(), 'http://www.symfony-project.org', '->getCurrentUri() on the child was also set.');
+
+  $currentMenu->setCurrentUri('http://www.sympalphp.org');
+  $t->is($currentMenu->getCurrentUri(), 'http://www.sympalphp.org', '->setCurrentUri() sets the current uri correctly a second time.');
+  $t->is($currentMenu['child']->getCurrentUri(), 'http://www.sympalphp.org', '->getCurrentUri() on the child was set for a second time.');
+
+  $currentMenu['child']->addChild('grandchild', 'http://www.doctrine-project.org');
+  $t->is($currentMenu['child']['grandchild']->getCurrentUri(), 'http://www.sympalphp.org', 'The current uri is passed to any new child objects.');
+
+  $t->info('  5.2 - Test the isCurrent() and isCurrentAncestor() methods.');
+  $t->is($currentMenu->isCurrent(), false, '->isCurrent() returns false, the route is not even set on that menu item.');
+
+  $t->info('    a) Test isCurrent() on the top level.');
+  $currentMenu->setRoute('http://www.sympalphp.org');
+  $currentMenu->resetIsCurrent(); // force _current to be recalculated
+  $t->is($currentMenu->isCurrent(), true, '->isCurrent() returns true, the current uri matches the uri of the menu item.');
+
+  $t->info('    b) Test isCurrent() on the second level.');
+  $currentMenu->setCurrentUri('http://www.symfony-project.org');
+  $currentMenu->resetIsCurrent(); // force _current to be recalculated
+  $currentMenu['child']->resetIsCurrent();
+  $t->is($currentMenu->isCurrent(), false, '->isCurrent() on the root returns false, no longer matches the current uri.');
+  $t->is($currentMenu['child']->isCurrent(), true, '->isCurrent() properly returns true on the child menu item.');
+  $t->is($currentMenu->isCurrentAncestor(), true, '->isCurrentAncestor() returns true since its child is current.');
+  $t->is($currentMenu['child']->isCurrentAncestor(), false, '->isCurrentAncestor() returns false when called in the current menu item itself.');
+
+  $t->info('    c) Test isCurrent() on the third level.');
+  $currentMenu->setCurrentUri('http://www.doctrine-project.org');
+  $currentMenu->resetIsCurrent(); // force _current to be recalculated
+  $currentMenu['child']->resetIsCurrent();
+  $currentMenu['child']['grandchild']->resetIsCurrent();
+  $t->is($currentMenu['child']->isCurrent(), false, '->isCurrent() on the child returns false, no longer matches the current uri.');
+  $t->is($currentMenu['child']['grandchild']->isCurrent(), true, '->isCurrent() properly returns true on the grandchild menu item.');
+  $t->is($currentMenu->isCurrentAncestor(), true, '->isCurrentAncestor() returns true on the root since its grandchild is current.');
+  $t->is($currentMenu['child']->isCurrentAncestor(), true, '->isCurrentAncestor() returns true on the child since its child is current.');
+  
 
 
 // prints a visual representation of our basic testing tree
