@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(126);
+$t = new lime_test(142);
 
 // stub class used for testing
 class ioMenuItemTest extends ioMenuItem
@@ -301,32 +301,71 @@ $t->info('6 - Test the url, link, label rendering');
   $t->is($menu->renderLink(), '<a href="'.url_for('@homepage').'">root</a>', '->renderLink() returns the correct link tag for true symfony route.');
   $menu->setRoute(null); // set it back to null
 
-$t->info('7 - Test the render() method.');
 
-  $t->info('  7.1 - Render the menu in a few basic ways');
+$t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
+
+  $t->info('  7.1 - Test callRecursively()');
+  $otherMenu = new ioMenuItem('other');
+  $otherMenu->addChild('child');
+  $otherMenu['child']->addChild('grandchild');
+  $t->info('    Call ->setLabel() recursively.');
+  $otherMenu->callRecursively('setLabel', 'changed');
+  $t->is($otherMenu->getLabel(), 'changed', 'The label was changed at the root.');
+  $t->is($otherMenu['child']->getLabel(), 'changed', 'The label was changed on the child.');
+  $t->is($otherMenu['child']['grandchild']->getLabel(), 'changed', 'The label was changed on the grandchild.');
+
+  $t->info('  7.2 - Test setDepth()');
+  $t->info('    a) Set a high depth, has no effect.');
+  $otherMenu->setDepth(10);
+  $t->is($otherMenu->showChildren(), true, 'The root still shows children.');
+  $t->is($otherMenu['child']->showChildren(), true, 'The child still shows children.');
+  $t->is($otherMenu['child']['grandchild']->showChildren(), true, 'The grandchild still shows children.');
+
+  $t->info('    b) Set a depth of 0, children are hidden at the top level.');
+  $otherMenu->setDepth(0);
+  $t->is($otherMenu->showChildren(), false, 'The root hides its children.');
+
+  $t->info('    c) Set a depth of 1, only children are shown');
+  $otherMenu->setDepth(1);
+  $t->is($otherMenu->showChildren(), true, 'The root shows its children.');
+  $t->is($otherMenu['child']->showChildren(), false, 'The child hides its children.');
+
+$t->info('8 - Test the render() method.');
+  check_test_tree($t, $menu);
+  print_test_tree($t);
+
+  $t->info('  8.1 - Render the menu in a few basic ways');
   $rendered = '<ul class="root"><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="last">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
   $t->is($menu->render(), $rendered, 'The full menu renders correctly.');
 
-  $t->info('  7.2 - Set a title and class on pt2, and see that it renders.');
+  $t->info('  8.2 - Set a title and class on pt2, and see that it renders.');
   $pt2->setAttribute('class', 'parent2_class');
   $pt2->setAttribute('title', 'parent2 title');
   $rendered = '<ul class="root"><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
   $t->is($menu->render(), $rendered, 'The menu renders with the title and class attributes.');
 
-  $t->info('  7.3 - Set ch2 menu as current, look for "current" and "current_ancestor" classes.');
+  $t->info('  8.3 - Set ch2 menu as current, look for "current" and "current_ancestor" classes.');
   $ch2->isCurrent(true);
   $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
   $t->is($menu->render(), $rendered, 'The menu renders with the current and current_ancestor classes.');
 
-  $t->info('  7.4 - Make ch4 hidden due to not having proper credentials');
+  $t->info('  8.4 - Make ch4 hidden due to not having proper credentials');
   $ch4->requiresAuth(true);
   $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul>';
   $t->is($menu->render(), $rendered, 'The menu renders, but ch4 and children are not shown.');
   $ch4->requiresAuth(false); // fix ch4
 
-  $t->info('  7.5 - Only render a submenu portion');
+  $t->info('  8.5 - Only render a submenu portion.');
   $rendered = '<ul class="parent2_class" title="parent2 title"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul>';
-  $t->is($menu['Parent 2']->render(), $rendered, 'The pt2 menu renders as a ul with the correct classes and its children beneath.');  
+  $t->is($menu['Parent 2']->render(), $rendered, 'The pt2 menu renders as a ul with the correct classes and its children beneath.');
+
+  $t->info('  8.6 - Test showChildren() functionality.');
+  $menu['Parent 1']->showChildren(false);
+  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
+  $menu['Parent 1']->showChildren(true); // replace the setting
+
+  $menu->showChildren(false);
+  $t->is($menu->render(), '', '->showChildren(false) at the root renders a blank string.');
 
 // prints a visual representation of our basic testing tree
 function print_test_tree(lime_test $t)

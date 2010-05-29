@@ -394,21 +394,37 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     return $this->_root;
   }
 
+  /**
+   * @return ioMenuItem|null
+   */
   public function getParent()
   {
     return $this->_parent;
   }
 
+  /**
+   * Used internally when adding children
+   *
+   * @param ioMenuItem $parent
+   * @return ioMenuItem
+   */
   public function setParent(ioMenuItem $parent)
   {
     return $this->_parent = $parent;
   }
 
+  /**
+   * @return array of ioMenuItem objects
+   */
   public function getChildren()
   {
     return $this->_children;
   }
 
+  /**
+   * @param  array $children An array of ioMenuItem objects
+   * @return ioMenuItem
+   */
   public function setChildren(array $children)
   {
     $this->_children = $children;
@@ -516,6 +532,34 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * Sets the depth of menu items to render.
+   *
+   *   * 0 - no children
+   *   * 1 - directly children only
+   *   * 2 - children and grandchildren
+   *
+   * @param  integer $depth The depth of menus to return
+   * @return void
+   */
+  public function setDepth($depth)
+  {
+    if ($depth == 0)
+    {
+      // hide the children and be done with it
+      $this->showChildren(false);
+    }
+    else
+    {
+      // show the children and set depth-1 on the children
+      $this->showChildren(true);
+      foreach ($this->getChildren() as $child)
+      {
+        $child->setDepth($depth - 1);
+      }
+    }
+  }
+
+  /**
    * Renders a ul tag and any children inside li tags.
    *
    * If this is being rendered as root, it means that it is acting as the
@@ -529,6 +573,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function render($renderAsRoot = true)
   {
+    // if we don't render children, render nothing
+    if (!$this->hasChildren() || !$this->showChildren())
+    {
+      return;
+    }
+
     if ($renderAsRoot)
     {
       $attributes = $this->getAttributes();
@@ -551,7 +601,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * @return string
    */
   public function renderChildren()
-  {
+  {  
     $html = '';
     foreach ($this->_children as $child)
     {
@@ -603,11 +653,8 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       // render the text/link inside the li tag
       $innerHtml = $this->_route ? $this->renderLink() : $this->renderLabel();
 
-      // if we have visible children, render them in a ul tag
-      if ($this->hasChildren() && $this->showChildren())
-      {
-        $innerHtml .= $this->render(false);
-      }
+      // renders the embedded ul if there are visible children
+      $innerHtml .= $this->render(false);
 
       return content_tag('li', $innerHtml, $attributes);
     }
@@ -803,6 +850,30 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     {
       $child->setCurrentUri($uri);
     }
+  }
+
+  /**
+   * Calls a method recursively on all of the children of this item
+   *
+   * @example
+   * $menu->callRecursively('showChildren', false);
+   *
+   * @return ioMenuItem
+   */
+  public function callRecursively()
+  {
+    $args = func_get_args();
+    $arguments = $args;
+    unset($arguments[0]);
+
+    call_user_func_array(array($this, $args[0]), $arguments);
+
+    foreach ($this->_children as $child)
+    {
+      call_user_func_array(array($child, 'callRecursively'), $args);
+    }
+
+    return $this;
   }
 
   /**
