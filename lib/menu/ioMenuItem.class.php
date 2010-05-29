@@ -38,6 +38,9 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $_root             = null,    // root ioMenuItem
     $_isCurrent        = null;    // whether or not this menu item is current
 
+  protected
+    $_currentUri       = null;    // the current uri to use for selecting current menu
+
 
   /**
    * Class constructor
@@ -296,6 +299,26 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * Returns the child menu identified by the given name
+   *
+   * If the child menu doesn't exist and $create is true, it will
+   * automatically be created
+   *
+   * @param  string $name  Then name of the child menu to return
+   * @param  boolean $create Whether or not to create the child if it does not exist
+   * @return ioMenuItem|null
+   */
+  public function getChild($name, $create = true)
+  {
+    if (!isset($this->_children[$name]) && $create)
+    {
+      $this->addChild($name);
+    }
+
+    return isset($this->_children[$name]) ? $this->_children[$name] : null;
+  }
+
+  /**
    * Returns whether or not the given/current user has permission to
    * view this current menu item
    *
@@ -304,14 +327,14 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function checkUserAccess(sfBasicSecurityUser $user = null)
   {
-    // if we're not passed a user and we have no context, bail
-    if ($user === null && !sfContext::hasInstance())
-    {
-      return true;
-    }
-
     if ($user === null)
     {
+      // if we're not passed a user and we have no context, bail
+      if (!sfContext::hasInstance())
+      {
+        return true;
+      }
+
       $user = sfContext::getInstance()->getUser();
     }
 
@@ -331,13 +354,15 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   /**
    * Returns the level of this menu item
    *
+   * The root menu item is 0, followed by 1, 2, etc
+   *
    * @return integer
    */
   public function getLevel()
   {
     if ($this->_level === null)
     {
-      $count = -2;
+      $count = -1;
       $obj = $this;
 
       do {
@@ -447,7 +472,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
       // reset the "num" of all children since we just shook up the child list
       $i = 0;
-      foreach ($this->_children as $children)
+      foreach ($this->_children as $child)
       {
         $child->setNum(++$i);
       }
@@ -471,25 +496,11 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
-   * @param  $name  Then name of the child menu to return
-   * @return ioMenutItem
-   */
-  public function getChild($name)
-  {
-    if (!isset($this->_children[$name]))
-    {
-      $this->addChild($name);
-    }
-
-    return $this->_children[$name];
-  }
-
-  /**
    * Returns whether or not this menu items has viewable children
-   * 
+   *
    * This menu MAY have children, but this will return false if the current
    * user does not have access to vew any of those items
-   * 
+   *
    * @return boolean;
    */
   public function hasChildren()
@@ -680,7 +691,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
     if ($this->_isCurrent === null)
     {
-      $url = sfContext::getInstance()->getRequest()->getUri();
+      $url = $this->getCurrentUri();
       $this->_isCurrent = ($this->getUrl(array('absolute' => true)) == $url);
     }
 
@@ -719,6 +730,50 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public function isFirst()
   {
     return ($this->getNum() == 1);
+  }
+
+  /**
+   * Returns the current uri, which is used for determining the current
+   * menu item.
+   *
+   * If the uri isn't set, this asks the root menu for the uri and if it
+   * is the root, it gets it from the request object
+   *
+   * @return string
+   */
+  public function getCurrentUri()
+  {
+    if ($this->_currentUri === null)
+    {
+      if ($this->getRoot())
+      {
+        $this->_currentUri = $this->getRoot()->getUri();
+      }
+      else
+      {
+        $this->_currentUri = sfContext::getInstance()->getRequest()->getUri();
+      }
+    }
+
+    return $this->_currentUri;
+  }
+
+  /**
+   * Sets the current uri, used when determining the current menu item
+   *
+   * This will set the current uri on the root menu item, which all other
+   * menu items will use
+   *
+   * @return void
+   */
+  public function setCurrentUri($uri)
+  {
+    $this->_currentUri = $uri;
+
+    if ($this->getRoot())
+    {
+      $this->getRoot()->setCurrentUri($uri);
+    }
   }
 
   /**
@@ -766,7 +821,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function offsetUnset($name)
   {
-    unset($this->_children[$name]);
+    $this->removeChild($name);
   }
 
   /**
