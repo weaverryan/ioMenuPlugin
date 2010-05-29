@@ -679,6 +679,75 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     return $this->getLabel();
   }
 
+  /**
+   * A string representation of this menu item
+   *
+   * e.g. Top Level > Second Level > This menu
+   *
+   * @param string $separator
+   * @return string
+   */
+  public function getPathAsString($separator = ' > ')
+  {
+    $children = array();
+    $obj = $this;
+
+    do {
+    	$children[] = $obj->renderLabel();
+    } while ($obj = $obj->getParent());
+
+    return implode($separator, array_reverse($children));
+  }
+
+  /**
+   * Renders an array of label => uri pairs ready to be used for breadcrumbs.
+   *
+   * The subItem can be one of the following forms
+   *   * 'subItem'
+   *   * array('subItem' => '@homepage')
+   *   * array('subItem1', 'subItem2')
+   *
+   * @example
+   * // drill down to the Documentation menu item, then add "Chapter 1" to the breadcrumb
+   * $arr = $menu['Documentation']->getBreadcrumbsArray('Chapter 1');
+   * foreach ($arr as $name => $url)
+   * {
+   *
+   * }
+   *
+   * @param  mixed $subItem A string or array to append onto the end of the array
+   * @return array
+   */
+  public function getBreadcrumbsArray($subItem = null)
+  {
+    $breadcrumbs = array();
+    $obj = $this;
+
+    if ($subItem)
+    {
+      if (!is_array($subItem))
+      {
+        $subItem = array((string) $subItem => null);
+      }
+      $subItem = array_reverse($subItem);
+      foreach ($subItem as $key => $value)
+      {
+        if (is_numeric($key))
+        {
+          $key = $value;
+          $value = null;
+        }
+        $breadcrumbs[(string) $key] = $value;
+      }
+    }
+
+    do {
+      $label = $obj->renderLabel();
+    	$breadcrumbs[$label] = $obj->getUri();
+    } while ($obj = $obj->getParent());
+
+    return array_reverse($breadcrumbs);
+  }
 
   /**
    * Returns the current menu item if it is a child of this menu item
@@ -861,6 +930,79 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * Exports this menu item to an array
+   *
+   * @return array
+   */
+  public function toArray()
+  {
+    $array = array();
+    $array['name'] = $this->getName();
+
+    if ($this->getRoute())
+    {
+      $array['route'] = $this->getRoute();
+    }
+    if ($this->_label)
+    {
+      $array['label'] = $this->_label;
+    }
+
+    if ($this->_isCurrent !== null)
+    {
+      $array['is_current'] = $this->isCurrent();
+    }
+
+    if (count($this->getAttributes()) > 0)
+    {
+      $array['attributes'] = $this->getAttributes();
+    }
+
+    foreach ($this->_children as $key => $child)
+    {
+      $array['children'][$key] = $child->toArray();
+    }
+
+    return $array;
+  }
+
+  /**
+   * Imports a menu item array into this menu item
+   *
+   * @param  array $array The menu item array
+   * @return ioMenuItem
+   */
+  public function fromArray($array)
+  {
+    $this->setName($array['name']);
+
+    if (isset($array['label']))
+    {
+      $this->_label = $array['label'];
+    }
+
+    if (isset($array['is_current']))
+    {
+      $this->isCurrent($array['is_current']);
+    }
+
+    if (isset($array['attributes']))
+    {
+      $this->setAttributes($array['attributes']);
+    }
+
+    if (isset($array['children']))
+    {
+      foreach ($array['children'] as $name => $child)
+      {
+        $this->addChild($name)->fromArray($child);
+      }
+    }
+
+    return $this;
+  }
+
+  /**
    * Implements Countable
    */
   public function count()
@@ -925,127 +1067,5 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     }
 
     return $event->getReturnValue();
-  }
-
-
-
-
-
-
-
-
-
-
-  public function getBreadcrumbsArray($subItem = null)
-  {
-    $breadcrumbs = array();
-    $obj = $this;
-
-    if ($subItem)
-    {
-      if (!is_array($subItem))
-      {
-        $subItem = array((string) $subItem => null);
-      }
-      $subItem = array_reverse($subItem);
-      foreach ($subItem as $key => $value)
-      {
-        if (is_numeric($key))
-        {
-          $key = $value;
-          $value = null;
-        }
-        $breadcrumbs[(string) $key] = $value;
-      }
-    }
-
-    do {
-      $label = __($obj->getLabel());
-    	$breadcrumbs[$label] = $obj->getRoute();
-    } while ($obj = $obj->getParent());
-
-    return count($breadcrumbs) > 1 ? array_reverse($breadcrumbs):array();
-  }
-
-  public function getBreadcrumbs($subItem = null)
-  {
-    return sfSympalMenuBreadcrumbs::generate($this->getBreadcrumbsArray($subItem));
-  }
-
-  public function getPathAsString()
-  {
-    $children = array();
-    $obj = $this;
-
-    do {
-    	$children[] = __($obj->getLabel());
-    } while ($obj = $obj->getParent());
-
-    return implode(' > ', array_reverse($children));
-  }
-
-  /**
-   * Exports this menu item to an array
-   *
-   * @return array
-   */
-  public function toArray()
-  {
-    $array = array();
-    $array['name'] = $this->getName();
-    if ($this->getRoute())
-    {
-      $array['route'] = $this->getRoute();
-    }
-    if ($this->_label)
-    {
-      $array['label'] = $this->_label;
-    }
-    $array['level'] = $this->getLevel();
-    $array['is_current'] = $this->isCurrent();
-    $array['attributes'] = $this->getAttributes();
-    foreach ($this->_children as $key => $child)
-    {
-      $array['children'][$key] = $child->toArray();
-    }
-
-    return $array;
-  }
-
-  /**
-   * Imports a menu item array into this menu item
-   *
-   * @param  array $array The menu item array
-   * @return ioMenuItem
-   */
-  public function fromArray($array)
-  {
-    $this->setName($array['name']);
-    if (isset($array['label']))
-    {
-      $this->_label = $array['label'];
-    }
-    if (isset($array['level']))
-    {
-      $this->_level = $array['level'];
-    }
-    if (isset($array['is_current']))
-    {
-      $this->isCurrent($array['is_current']);
-    }
-    if (isset($array['attributes']))
-    {
-      $this->setAttributes($array['attributes']);
-    }
-
-    if (isset($array['children']))
-    {
-      foreach ($array['children'] as $name => $child)
-      {
-        $this->addChild($name)->fromArray($child);
-      }
-    }
-
-    return $this;
   }
 }

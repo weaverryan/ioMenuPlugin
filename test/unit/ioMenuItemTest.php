@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(142);
+$t = new lime_test(151);
 
 // stub class used for testing
 class ioMenuItemTest extends ioMenuItem
@@ -14,7 +14,9 @@ class ioMenuItemTest extends ioMenuItem
     $this->_isCurrent = null;
   }
 }
-
+getPathAsString
+getBreadcrumbsArray
+  
 $t->info('1 - Test basic getters, setters and constructor');
   $menu = new ioMenuItem('test menu', '@homepage', array('title' => 'my menu'));
 
@@ -313,6 +315,62 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
   $t->is($otherMenu->getLabel(), 'changed', 'The label was changed at the root.');
   $t->is($otherMenu['child']->getLabel(), 'changed', 'The label was changed on the child.');
   $t->is($otherMenu['child']['grandchild']->getLabel(), 'changed', 'The label was changed on the grandchild.');
+
+  $t->info('  7.2 - Test getPathAsString()');
+  $t->is($gc1->getPathAsString('---'), 'root---Parent 2---Child 4---Grandchild 1', '->getPathAsString() returns the correct string path for gc1.');
+
+  $t->info('  7.3 - Test getBreadcrumbsArray()');
+  $breadcrumbsMenu = new ioMenuItem('Home', 'http://www.sympalphp.org');
+  $breadcrumbsMenu->addChild('Reference Manual', 'http://www.sympalphp.org/documentation/1_0/book/en');
+  $breadcrumbsMenu['Reference Manual']->addChild('Introduction', 'http://www.sympalphp.org/documentation/1_0/book/introduction/en');
+
+  $breadcrumbs1 = array('Home' => 'http://www.sympalphp.org');
+  $breadcrumbs2 = array(
+    'Home' => 'http://www.sympalphp.org',
+    'Reference Manual' => 'http://www.sympalphp.org/documentation/1_0/book/en',
+  );
+  $breadcrumbs3 = array(
+    'Home' => 'http://www.sympalphp.org',
+    'Reference Manual'  => 'http://www.sympalphp.org/documentation/1_0/book/en',
+    'Introduction'      => 'http://www.sympalphp.org/documentation/1_0/book/introduction/en',
+  );
+
+  $t->is($breadcrumbsMenu->getBreadcrumbsArray(), $breadcrumbs1, '->getBreadcrumbsMenu() on the root returns the correct array.');
+  $t->is($breadcrumbsMenu['Reference Manual']->getBreadcrumbsArray(), $breadcrumbs2, '->getBreadcrumbsMenu() on the child returns the correct array.');
+  $t->is($breadcrumbsMenu['Reference Manual']['Introduction']->getBreadcrumbsArray(), $breadcrumbs3, '->getBreadcrumbsMenu() on the grandchild returns the correct array.');
+
+  $t->is($breadcrumbsMenu->getBreadcrumbsArray('test'), array('Home' => 'http://www.sympalphp.org', 'test' => null), '->getBreadcrumbsArray() with a string parameter adds one entry to the array.');
+  $t->is($breadcrumbsMenu->getBreadcrumbsArray(array('test' => 'http://google.com')), array('Home' => 'http://www.sympalphp.org', 'test' => 'http://google.com'), '->getBreadcrumbsArray() with a name => route array parameter adds one entry to the array.');
+  $t->is($breadcrumbsMenu->getBreadcrumbsArray(array('test1', 'test2')), array('Home' => 'http://www.sympalphp.org', 'test1' => null, 'test2' => null), '->getBreadcrumbsArray() with an indexed array parameter adds each item to the array.');
+
+  $t->info('  7.4 - Test toArray(), fromArray()');
+  $t->info('    a) Test ->toArray() on pt2');
+  $menu['Parent 2']->isCurrent(true);
+  $menu['Parent 2']->setAttribute('class', 'parent2');
+  $t->is($menu['Parent 2']->toArray(), array(
+    'name' => 'Parent 2',
+    'is_current' => true,
+    'attributes' => array('class' => 'parent2'),
+    'children' => array(
+      'Child 4' => array(
+        'name' => 'Child 4',
+        'children' => array(
+          'Grandchild 1' => array(
+            'name'        => 'Grandchild 1',
+          )
+        )
+      )
+    )
+  ), 'Test toArray() on pt2');
+
+  $t->info('    b) Test ->fromArray(), sourcing from p2');
+  $test = new ioMenuItemTest('Imported');
+  $test->fromArray($menu['Parent 2']->toArray());
+  $t->is($test->toArray(), $menu['Parent 2']->toArray(), 'Creating a new menu item from pt2\'s source gives us an identical menu.');
+
+  // reset some settings
+  $menu['Parent 2']->isCurrent(false);
+  $menu['Parent 2']->setAttribute('class', null);
 
 $t->info('8 - Test the render() method.');
   check_test_tree($t, $menu);
