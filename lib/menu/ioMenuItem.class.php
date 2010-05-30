@@ -660,6 +660,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     else
     {
       $attributes = $this->getAttributes();
+
+      // give the top ul a class of "menu" of none specified
+      if (!isset($attributes['class']))
+      {
+        $attributes['class'] = 'menu';
+      }
     }
 
     // render children with a depth - 1
