@@ -1176,26 +1176,21 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function toArray($withChildren = true)
   {
+    $fields = array(
+      'name',
+      'label',
+      'route',
+      'attributes',
+      'requiresAuth',
+      'requiresNoAuth',
+      'credentials',
+    );
     $array = array();
-    $array['name'] = $this->getName();
 
-    if ($this->getRoute())
+    foreach ($fields as $field)
     {
-      $array['route'] = $this->getRoute();
-    }
-    if ($this->_label)
-    {
-      $array['label'] = $this->_label;
-    }
-
-    if ($this->_isCurrent !== null)
-    {
-      $array['is_current'] = $this->isCurrent();
-    }
-
-    if (count($this->getAttributes()) > 0)
-    {
-      $array['attributes'] = $this->getAttributes();
+      $propName = '_'.$field;
+      $array[$field] = $this->$propName;
     }
 
     // export the children as well, unless explicitly disabled
@@ -1225,14 +1220,29 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $this->_label = $array['label'];
     }
 
-    if (isset($array['is_current']))
+    if (isset($array['route']))
     {
-      $this->isCurrent($array['is_current']);
+      $this->setRoute($array['route']);
     }
 
     if (isset($array['attributes']))
     {
       $this->setAttributes($array['attributes']);
+    }
+
+    if (isset($array['requiresAuth']))
+    {
+      $this->requiresAuth($array['requiresAuth']);
+    }
+    
+    if (isset($array['requiresNoAuth']))
+    {
+      $this->requiresNoAuth($array['requiresNoAuth']);
+    }
+
+    if (isset($array['credentials']))
+    {
+      $this->setCredentials($array['credentials']);
     }
 
     if (isset($array['children']))
