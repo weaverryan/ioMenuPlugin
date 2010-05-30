@@ -26,33 +26,30 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $_label            = null,    // the label to output, name is used by default
     $_route            = null,    // the route or url to use in the anchor tag
     $_attributes       = array(), // an array of attributes for the li
-    $_children         = array(), // an array of ioMenuItem children
     $_requiresAuth     = null,    // boolean to require auth to show this menu
     $_requiresNoAuth   = null,    // boolean to require NO auth to show this menu
-    $_showChildren     = true,    // boolean to render the children of this menu
     $_credentials      = array(); // array of credentials needed to display this menu
 
   /**
-   * Some link and url options
+   * Options related to rendering
    */
   protected
-    $_urlOptions        = array(), // the options array passed to url_for()
-    $_linkOptions       = array(); // the options array passed to link_to()
+    $_showChildren     = true,    // boolean to render the children of this menu
+    $_urlOptions       = array(), // the options array passed to url_for()
+    $_linkOptions      = array(); // the options array passed to link_to()
 
   /**
    * Metadata on this menu item
    */
   protected
+    $_children         = array(), // an array of ioMenuItem children
     $_level            = null,    // the level (depth) of this menu item
     $_num              = null,    // the order number this menu is in its parent
     $_parent           = null,    // parent ioMenuItem
     $_root             = null,    // root ioMenuItem
     $_isCurrent        = null,    // whether or not this menu item is current
-    $_userAccess       = null;    // whether or not the current user can access this item
-
-  protected
+    $_userAccess       = null,    // whether or not the current user can access this item
     $_currentUri       = null;    // the current uri to use for selecting current menu
-
 
   /**
    * Class constructor
