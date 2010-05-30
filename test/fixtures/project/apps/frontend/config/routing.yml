@@ -6,6 +6,11 @@ homepage:
   url:   /
   param: { module: default, action: index }
 
+# url to display a big menu
+test_menu:
+  url:   /big-menu
+  param: { module: test, action: bigMenu }
+
 # generic rules
 # please, remove them by adding more specific rules
 default_index:
