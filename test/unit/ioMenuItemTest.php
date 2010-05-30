@@ -78,7 +78,7 @@ $t->info('1 - Test basic getters, setters and constructor');
 $t->info('### Creating the test tree.');
 
 // create the tree and make the variables available
-extract(create_test_tree($t));
+extract(create_test_tree($t, 'ioMenuItemTest'));
 
 
 $t->info('2 - Test the construction of trees');

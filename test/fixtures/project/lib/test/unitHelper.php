@@ -4,11 +4,11 @@
  */
 
 // creates the test tree. Run extract() on the return to make variables available
-function create_test_tree(lime_test $t)
+function create_test_tree(lime_test $t, $class = 'ioMenuItem')
 {
   $t->info('### Creating the test menu.');
 
-  $menu = new ioMenuItemTest('Root li', null, array('class' => 'root'));
+  $menu = new $class('Root li', null, array('class' => 'root'));
   $pt1 = $menu->getChild('Parent 1');
   $ch1 = $pt1->addChild('Child 1');
   $ch2 = $pt1->addChild('Child 2');
