@@ -8,7 +8,7 @@ $browser->info('1 - Surf to a url with a complex menu and check several things.'
   ->get('/big-menu')
  ;
 
-$rendered = '
+$pretty = '
 <ul class="root">
   <li class="first">
     <a href="'.url_for('@homepage', true).'">Parent 1</a>
@@ -37,10 +37,11 @@ $rendered = '
 </ul>';
 
 // remove whitespace (it takes quite a bit to remove the right stuff)
-$rendered = preg_replace('/\s\s+/', ' ', $rendered);
+$rendered = preg_replace('/\s\s+/', ' ', $pretty);
 $rendered = str_replace("\n", '', $rendered);
 $rendered = str_replace('> ', '>', $rendered);
 $rendered = str_replace(' <', '<', $rendered);
 $rendered = trim($rendered);
 
+$browser->info('Rendered Menu: '.$pretty);
 $browser->test()->is($browser->getResponse()->getContent(), $rendered, 'The full rendered menu is correct.');
