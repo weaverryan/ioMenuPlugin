@@ -1171,9 +1171,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   /**
    * Exports this menu item to an array
    *
+   * @param boolean $withChildren Whether to
    * @return array
    */
-  public function toArray()
+  public function toArray($withChildren = true)
   {
     $array = array();
     $array['name'] = $this->getName();
@@ -1197,9 +1198,13 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $array['attributes'] = $this->getAttributes();
     }
 
-    foreach ($this->_children as $key => $child)
+    // export the children as well, unless explicitly disabled
+    if ($withChildren)
     {
-      $array['children'][$key] = $child->toArray();
+      foreach ($this->_children as $key => $child)
+      {
+        $array['children'][$key] = $child->toArray();
+      }
     }
 
     return $array;

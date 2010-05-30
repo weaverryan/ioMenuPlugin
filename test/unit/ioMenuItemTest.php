@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(166);
+$t = new lime_test(167);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -418,6 +418,11 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
       )
     )
   ), 'Test toArray() on pt2');
+  $t->is($menu['Parent 2']->toArray(false), array(
+    'name' => 'Parent 2',
+    'is_current' => true,
+    'attributes' => array('class' => 'parent2')
+  ), 'Test toArray() without children on pt2');
 
   $t->info('    b) Test ->fromArray(), sourcing from p2');
   $test = new ioMenuItemTest('Imported');
