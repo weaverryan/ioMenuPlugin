@@ -1,7 +1,12 @@
 <?php
 
 /**
- * The main, top-level menu which holds ioMenuItem instances
+ * A convenience class for creating the root node of a menu.
+ *
+ * When creating the root menu object, you can use this class or the
+ * normal ioMenuItem class. For example, the following are equivalent:
+ *   $menu = new ioMenu(array('class' => 'root'));
+ *   $menu = new ioMenuItem(null, null, array('class' => 'root'));
  * 
  * @package     ioMenuPlugin
  * @subpackage  menu
