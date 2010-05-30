@@ -5,13 +5,19 @@ require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
 $t = new lime_test(164);
 
+$timer = new sfTimer();
 // stub class used for testing
 class ioMenuItemTest extends ioMenuItem
 {
-  // resets the current property so we can test for current repeatedly.
+  // resets the isCurrent property so we can test for current repeatedly.
   public function resetIsCurrent()
   {
     $this->_isCurrent = null;
+  }
+  // resets the userAccess property so we can test for current repeatedly.
+  public function resetUserAccess()
+  {
+    $this->_userAccess = null;
   }
 }
   
@@ -225,7 +231,7 @@ $t->info('4 - Check the credentials and security functions.');
 
   $t->info('  4.2 - Test actsLikeFirst(), actsLikeLast()');
   $user->setAuthenticated(false);
-  $userMenu = new ioMenuItem('user menu');
+  $userMenu = new ioMenuItemTest('user menu');
 
   $t->info('    a) Create 3 normal children and as the actsLike methods on them');
   $userMenu['ch1'];
@@ -238,11 +244,13 @@ $t->info('4 - Check the credentials and security functions.');
 
   $t->info('    b) Hide child 1 by making it require auth.');
   $userMenu['ch1']->requiresAuth(true);
+  $userMenu['ch1']->resetUserAccess();
   $t->is($userMenu['ch1']->actsLikeFirst(), false, '->actsLikeFirst() returns false for the first child, it is hidden.');
   $t->is($userMenu['ch2']->actsLikeFirst(), true, '->actsLikeFirst() returns true for the second child, the first is hidden.');
 
   $t->info('    c) Hide child 3 by making it require auth.');
   $userMenu['ch3']->requiresAuth(true);
+  $userMenu['ch3']->resetUserAccess();
   $t->is($userMenu['ch3']->actsLikeLast(), false, '->actsLikeLast() returns false for the third child, it is hidden.');
   $t->is($userMenu['ch2']->actsLikeLast(), true, '->actsLikeLast() returns true for the second child, the third is hidden.');
 
@@ -439,9 +447,11 @@ $t->info('8 - Test the render() method.');
 
   $t->info('  8.4 - Make ch4 hidden due to not having proper credentials');
   $ch4->requiresAuth(true);
+  $ch4->resetUserAccess();
   $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul>';
   $t->is($menu->render(), $rendered, 'The menu renders, but ch4 and children are not shown.');
   $ch4->requiresAuth(false); // fix ch4
+  $ch4->resetUserAccess();
 
   $t->info('  8.5 - Only render a submenu portion.');
   $rendered = '<ul class="parent2_class" title="parent2 title"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul>';
@@ -499,3 +509,6 @@ function check_test_tree(lime_test $t, ioMenuItem $menu)
   $t->is_deeply($menu['Parent 2']['Child 4']['Grandchild 1']->getName(), 'Grandchild 1', 'gc1 has the name "Grandchild 1"');
 }
 
+// used for benchmarking
+$timer->addTime();
+$t->info('Test completed in '.$timer->getElapsedTime());

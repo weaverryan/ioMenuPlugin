@@ -28,6 +28,9 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $_showChildren     = true,    // boolean to render the children of this menu
     $_credentials      = array(); // array of credentials needed to display this menu
 
+  /**
+   * Some link and url options
+   */
   protected
     $_urlOptions        = array(), // the options array passed to url_for()
     $_linkOptions       = array(); // the options array passed to link_to()
@@ -40,7 +43,8 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $_num              = null,    // the order number this menu is in its parent
     $_parent           = null,    // parent ioMenuItem
     $_root             = null,    // root ioMenuItem
-    $_isCurrent        = null;    // whether or not this menu item is current
+    $_isCurrent        = null,    // whether or not this menu item is current
+    $_userAccess       = null;    // whether or not the current user can access this item
 
   protected
     $_currentUri       = null;    // the current uri to use for selecting current menu
@@ -346,13 +350,25 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
   /**
    * Returns whether or not the given/current user has permission to
-   * view this current menu item
+   * view this current menu item.
+   *
+   * This saves the result as a property on this class for the current
+   * user so that this method isn't checked redundantly. If an argument
+   * is passed in, the property is ignored.
    *
    * @param sfUser $user
    * @return bool
    */
   public function checkUserAccess(sfBasicSecurityUser $user = null)
   {
+    // if we're not checking a special user and _userAccess is already known, just return it
+    if ($user === null && $this->_userAccess !== null)
+    {
+      return $this->_userAccess;
+    }
+
+    // cache the end value unless a custom user object has been passed
+    $userPropertyCache = ($user === null);
     if ($user === null)
     {
       // if we're not passed a user and we have no context, bail
@@ -364,17 +380,27 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $user = sfContext::getInstance()->getUser();
     }
 
+    // determine the user access
     if ($user->isAuthenticated() && $this->requiresNoAuth())
     {
-      return false;
+      $userAccess = false;
     }
-
-    if (!$user->isAuthenticated() && $this->requiresAuth())
+    elseif (!$user->isAuthenticated() && $this->requiresAuth())
     {
-      return false;
+      $userAccess = false;
+    }
+    else
+    {
+      $userAccess = $user->hasCredential($this->getCredentials());
     }
 
-    return $user->hasCredential($this->getCredentials());
+    // if we should cache this value on the property, do it now
+    if ($userPropertyCache)
+    {
+      $this->_userAccess = $userAccess;
+    }
+
+    return $userAccess;
   }
 
   /**
