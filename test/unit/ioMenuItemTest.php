@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(164);
+$t = new lime_test(166);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -109,6 +109,8 @@ $t->info('2 - Test the construction of trees');
   $t->is($menu->getRoot(), $menu, '->getRoot() on rt returns itself.');
   $t->is($pt1->getRoot(), $menu, '->getRoot() on pt1 returns rt.');
   $t->is($gc1->getRoot(), $menu, '->getRoot() on gc1 returns rt.');
+  $t->is($menu->isRoot(), true, '->isRoot() returns true for rt');
+  $t->is($pt1->isRoot(), false, '->isRoot() returns false for pt1');
 
   $t->is($menu->getParent(), null, '->getParent() on rt returns null - it has no parent.');
   $t->is($pt1->getParent(), $menu, '->getParent() on pt1 returns rt.');

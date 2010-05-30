@@ -449,6 +449,16 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * Returns whether or not this menu item is the root menu item
+   *
+   * @return bool
+   */
+  public function isRoot()
+  {
+    return (bool) !$this->getParent();
+  }
+
+  /**
    * @return ioMenuItem|null
    */
   public function getParent()
@@ -977,7 +987,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public function isLast()
   {
     // if this is root, then return false
-    if (!$this->getParent())
+    if ($this->isRoot())
     {
       return false;
     }
@@ -991,7 +1001,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public function isFirst()
   {
     // if this is root, then return false
-    if (!$this->getParent())
+    if ($this->isRoot())
     {
       return false;
     }
@@ -1011,7 +1021,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public function actsLikeFirst()
   {
     // root items are never "marked" as first 
-    if (!$this->getParent())
+    if ($this->isRoot())
     {
       return false;
     }
@@ -1047,7 +1057,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public function actsLikeLast()
   {
     // root items are never "marked" as last
-    if (!$this->getParent())
+    if ($this->isRoot())
     {
       return false;
     }
