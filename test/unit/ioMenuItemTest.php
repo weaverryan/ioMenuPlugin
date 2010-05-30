@@ -429,6 +429,8 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
 $t->info('8 - Test the render() method.');
   check_test_tree($t, $menu);
   print_test_tree($t);
+  $t->info('### Set the menu to compressed format. Functional tests asserts with uncompressed.');
+  ioMenuItem::$renderCompressed = true;
 
   $t->info('  8.1 - Render the menu in a few basic ways');
   $rendered = '<ul class="root"><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="last">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';

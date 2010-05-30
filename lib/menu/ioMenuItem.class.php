@@ -13,6 +13,10 @@
  */
 class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 {
+  /**
+   * Whether or not to render menus with pretty spacing, or fully compressed.
+   */
+  public static $renderCompressed = false;
 
   /**
    * Properties on this menu item
@@ -661,7 +665,11 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     // render children with a depth - 1
     $childDepth = ($depth === null) ? null : ($depth - 1);
 
-    return content_tag('ul', $this->renderChildren($childDepth), $attributes);
+    $html = $this->_format('<ul'._tag_options($attributes).'>', 'ul');
+    $html .= $this->renderChildren($childDepth);
+    $html .= $this->_format('</ul>', 'ul');
+
+    return $html;
   }
 
   /**
@@ -725,14 +733,51 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
         $attributes['class'] = implode(' ', $class);
       }
 
+      // opening li tag
+      $html .= $this->_format('<li'._tag_options($attributes).'>', 'li');
+
       // render the text/link inside the li tag
-      $innerHtml = $this->_route ? $this->renderLink() : $this->renderLabel();
+      $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
 
       // renders the embedded ul if there are visible children
-      $innerHtml .= $this->render($depth, true);
+      $html .= $this->render($depth, true);
 
-      return content_tag('li', $innerHtml, $attributes);
+      // closing li tag
+      $html .= $this->_format('</li>', 'li');
+
+      return $html;
     }
+  }
+
+  /**
+   * If self::$renderCompressed is on, this will apply the necessary
+   * spacing and line-breaking so that the particular thing being rendered
+   * makes up its part in a fully-rendered and spaced menu.
+   *
+   * @param  string $html The html to render in an (un)formatted way
+   * @param  string $type The type [ul,link,li] of thing being rendered 
+   * @return string
+   */
+  protected function _format($html, $type)
+  {
+    if (self::$renderCompressed)
+    {
+      return $html;
+    }
+
+    switch ($type)
+    {
+      case 'ul':
+      case 'link':
+        $spacing = $this->getLevel() * 4;
+        break;
+
+      case 'li':
+        $spacing = $this->getLevel() * 4 - 2;
+        break;
+    }
+
+    return str_repeat(' ', $spacing).$html."\n";
   }
 
   /**
