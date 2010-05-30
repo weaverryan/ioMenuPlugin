@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(167);
+$t = new lime_test(168);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -85,7 +85,10 @@ $menu = new ioMenuItemTest('Root li', null, array('class' => 'root'));
 $pt1 = $menu->getChild('Parent 1');
 $ch1 = $pt1->addChild('Child 1');
 $ch2 = $pt1->addChild('Child 2');
-$ch3 = $pt1->addChild('Child 3');
+
+// add the 3rd child via addChild with an object
+$ch3 = new ioMenuItemTest('Child 3');
+$pt1->addChild($ch3);
 
 $pt2 = $menu->getChild('Parent 2');
 $ch4 = $pt2->addChild('Child 4');
@@ -111,6 +114,7 @@ $t->info('2 - Test the construction of trees');
   $t->is($gc1->getRoot(), $menu, '->getRoot() on gc1 returns rt.');
   $t->is($menu->isRoot(), true, '->isRoot() returns true for rt');
   $t->is($pt1->isRoot(), false, '->isRoot() returns false for pt1');
+  $t->is($ch3->isRoot(), false, '->isRoot() returns false for ch3, which was originally a root and then was added to a tree.');
 
   $t->is($menu->getParent(), null, '->getParent() on rt returns null - it has no parent.');
   $t->is($pt1->getParent(), $menu, '->getParent() on pt1 returns rt.');
