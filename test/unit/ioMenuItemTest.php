@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(151);
+$t = new lime_test(156);
 
 // stub class used for testing
 class ioMenuItemTest extends ioMenuItem
@@ -14,8 +14,6 @@ class ioMenuItemTest extends ioMenuItem
     $this->_isCurrent = null;
   }
 }
-getPathAsString
-getBreadcrumbsArray
   
 $t->info('1 - Test basic getters, setters and constructor');
   $menu = new ioMenuItem('test menu', '@homepage', array('title' => 'my menu'));
@@ -290,18 +288,41 @@ $t->info('6 - Test the url, link, label rendering');
     $t->pass('Exception thrown.');
   }
 
-  $t->info('  6.2 - Test the basic rendering functions, renderLabel(), renderLink()');
+  $t->info('    Test ->getUri() with url options');
+  $menu->setRoute('@homepage');
+  $menu->setUrlOptions(array('absolute' => true));
+  $t->is($menu->getUri(), url_for('@homepage', true), '->getUri() with @homepage route and absolute url returns absolute url.');
+  $menu->setRoute('/module/action');
+  $t->is($menu->getUri(), url_for('/module/action', true), '->getUri() with /module/action route and absolute url returns absolute url.');
+  $menu->setRoute('homepage');
+  $t->is($menu->getUri(), url_for('@homepage', true), '->getUri() with "homepage "route and absolute url returns absolute url.');
+  $menu->setUrlOptions(array()); // replace settings
+
+  $t->info('  6.2 - Test renderLabel()');
   $t->is($menu->renderLabel(), 'Root li', '->renderLabel() on rt returns "Root li", its name');
   $menu->setLabel('root');
   $t->is($menu->renderLabel(), 'root', '->renderLabel() on rt returns "root" after setting the label');
 
+  $t->info('  6.3 - Test renderLink()');
   $menu->setRoute(null);
   $t->is($menu->renderLink(), $menu->renderLabel(), '->renderLink() == renderLabel() on rt because no route is set.');
   $menu->setRoute('http://www.google.com');
   $t->is($menu->renderLink(), '<a href="http://www.google.com">root</a>', '->renderLink() returns the correct link tag for an absolute url route.');
   $menu->setRoute('@homepage');
   $t->is($menu->renderLink(), '<a href="'.url_for('@homepage').'">root</a>', '->renderLink() returns the correct link tag for true symfony route.');
-  $menu->setRoute(null); // set it back to null
+
+  $t->info('    Set some link options and use the @route format');
+  $menu->setLinkOptions(array('query_string' => 'test=1'));
+  $t->is($menu->renderLink(), '<a href="'.url_for('@homepage').'?test=1">root</a>', '->renderLink() uses the link options when rendering.');
+  $t->info('    Set absolute=>true on the url options and use the "route" format.');
+  $menu->setRoute('homepage');
+  $menu->setUrlOptions(array('absolute' => true));
+  $t->is($menu->renderLink(), '<a href="'.url_for('@homepage', true).'?test=1">root</a>', '->renderLink() properly uses the url option to render absolutely.');
+
+  // replace settings
+  $menu->setLinkOptions(array());
+  $menu->setUrlOptions(array());
+  $menu->setRoute(null);
 
 
 $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');

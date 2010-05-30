@@ -5,7 +5,7 @@
  * 
  * Originally taken from sympal (http://www.sympalphp.org)
  * 
- * @package     ioMenu
+ * @package     ioMenuPlugin
  * @subpackage  menu
  * @author      Jonathan H. Wage <jonwage@gmail.com>
  * @author      Ryan Weaver <ryan@thatsquality.com>
@@ -27,6 +27,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $_requiresNoAuth   = null,    // boolean to require NO auth to show this menu
     $_showChildren     = true,    // boolean to render the children of this menu
     $_credentials      = array(); // array of credentials needed to display this menu
+
+  protected
+    $_urlOptions        = array(), // the options array passed to url_for()
+    $_linkOptions       = array(); // the options array passed to link_to()
 
   /**
    * Metadata on this menu item
@@ -72,9 +76,31 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       return null;
     }
 
+    // setup the options array and single out the absolute boolean
+    $options = array_merge($this->getUrlOptions(), $options);
+    if (isset($options['absolute']))
+    {
+      $absolute = $options['absolute'];
+      unset($options['absolute']);
+    }
+    else
+    {
+      $absolute = false;
+    }
+
     try
     {
-      return url_for($this->getRoute(), $options);
+      // Handling of the url options varies depending on the url format
+      if ($this->_isOldRouteMethod())
+      {
+        // old-school url_for('@route_name', $absolute);
+        return url_for($this->getRoute(), $absolute);
+      }
+      else
+      {
+        // new-school url_for('route_name', $options, $absolute)
+        return url_for($this->getRoute(), $options, $absolute);
+      }
     }
     catch (sfConfigurationException $e)
     {
@@ -434,6 +460,45 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * Sets the array of options to use when running url_for()
+   *
+   * @param  array $options The array of options to set
+   * @return void
+   */
+  public function setUrlOptions(array $options)
+  {
+    $this->_urlOptions = $options;
+  }
+
+  /**
+   * @return array
+   */
+  public function getUrlOptions()
+  {
+    return $this->_urlOptions;
+  }
+
+  /**
+   * @return array
+   */
+  public function getLinkOptions()
+  {
+    return $this->_linkOptions;
+  }
+
+  /**
+   * The options that will be used in the link_to() function for this menu item.
+   *
+   * @param  $linkOptions The options to set
+   * @return void
+   */
+  public function setLinkOptions($linkOptions)
+  {
+    $this->_linkOptions = $linkOptions;
+  }
+  
+
+  /**
    * Returns the index that this child is within its parent.
    *
    * Primarily used internally to calculate first and last
@@ -659,7 +724,25 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       return $this->renderLabel();
     }
 
-    return content_tag('a', $this->renderLabel(), array('href' => $this->getUri()));
+    // Handling of the url options and link options varies depending on the url format
+    if ($this->_isOldRouteMethod())
+    {
+      // old-school link_to('link text', '@route_name', $options);
+      return link_to($this->renderLabel(), $this->getRoute(), array_merge($this->getUrlOptions(), $this->getLinkOptions()));
+    }
+    else
+    {
+      // new-school link_to('link text', 'route_name', $params, $options)
+      $params = $this->getUrlOptions();
+      $options = $this->getLinkOptions();
+      if (isset($params['absolute']))
+      {
+        $options['absolute'] = $params['absolute'];
+        unset($params['absolute']);
+      }
+
+      return link_to($this->renderLabel(), $this->getRoute(), $params, $options);
+    }
   }
 
   /**
@@ -1000,6 +1083,19 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     }
 
     return $this;
+  }
+
+  /**
+   * Returns whether or not the route method used is in the old format
+   * or the new format.
+   *
+   * This affects how we generate urls and links
+   *
+   * @return bool
+   */
+  protected function _isOldRouteMethod()
+  {
+    return ('@' == substr($this->getRoute(), 0, 1) || false !== strpos($this->getRoute(), '/'));
   }
 
   /**
