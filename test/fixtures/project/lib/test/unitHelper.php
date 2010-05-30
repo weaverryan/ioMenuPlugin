@@ -14,7 +14,7 @@ function create_test_tree(lime_test $t, $class = 'ioMenuItem')
   $ch2 = $pt1->addChild('Child 2');
 
   // add the 3rd child via addChild with an object
-  $ch3 = new ioMenuItemTest('Child 3');
+  $ch3 = new $class('Child 3');
   $pt1->addChild($ch3);
 
   $pt2 = $menu->getChild('Parent 2');
