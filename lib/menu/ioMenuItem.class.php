@@ -683,11 +683,11 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
         $class[] = 'current_ancestor';
       }
 
-      if ($this->isFirst())
+      if ($this->actsLikeFirst())
       {
         $class[] = 'first';
       }
-      if ($this->isLast())
+      if ($this->actsLikeLast())
       {
         $class[] = 'last';
       }
@@ -923,6 +923,78 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     }
 
     return ($this->getNum() == 1);
+  }
+
+  /**
+   * Whereas isFirst() returns if this is the first child of the parent
+   * menu item, this function takes into consideration user credentials.
+   *
+   * This returns true if this is the first child that would be rendered
+   * for the current user 
+   *
+   * @return boolean
+   */
+  public function actsLikeFirst()
+  {
+    // root items are never "marked" as first 
+    if (!$this->getParent())
+    {
+      return false;
+    }
+
+    // if we're first and visible, we're first, period.
+    if ($this->checkUserAccess() && $this->isFirst())
+    {
+      return true;
+    }
+
+    $children = $this->getParent()->getChildren();
+    foreach ($children as $child)
+    {
+      // loop until we find a visible menu. If its this menu, we're first
+      if ($child->checkUserAccess())
+      {
+        return $child->getName() == $this->getName();
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Whereas isLast() returns if this is the last child of the parent
+   * menu item, this function takes into consideration user credentials.
+   *
+   * This returns true if this is the last child that would be rendered
+   * for the current user
+   *
+   * @return boolean
+   */
+  public function actsLikeLast()
+  {
+    // root items are never "marked" as last
+    if (!$this->getParent())
+    {
+      return false;
+    }
+
+    // if we're last and visible, we're last, period.
+    if ($this->checkUserAccess() && $this->isLast())
+    {
+      return true;
+    }
+
+    $children = array_reverse($this->getParent()->getChildren());
+    foreach ($children as $child)
+    {
+      // loop until we find a visible menu. If its this menu, we're first
+      if ($child->checkUserAccess())
+      {
+        return $child->getName() == $this->getName();
+      }
+    }
+
+    return false;
   }
 
   /**

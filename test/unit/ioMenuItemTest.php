@@ -3,7 +3,7 @@
 require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 
-$t = new lime_test(156);
+$t = new lime_test(164);
 
 // stub class used for testing
 class ioMenuItemTest extends ioMenuItem
@@ -195,6 +195,8 @@ $t->info('3 - Test child-related functionality.');
   $t->is(count($ch4), 1, '->removeChildren() with a non-existent child does nothing');
 
 $t->info('4 - Check the credentials and security functions.');
+
+  $t->info('  4.1 - Test ->checkUserAccess() under a variety of conditions.');
   $userMenu = new ioMenuItem('user menu');
   $user = new sfBasicSecurityUser($configuration->getEventDispatcher(), new sfNoStorage());
   $t->is($userMenu->checkUserAccess($user), true, '->checkUserAccess() returns true for a menu with no restrictions.');
@@ -220,6 +222,29 @@ $t->info('4 - Check the credentials and security functions.');
   $user->removeCredential('c2');
   $userMenu->setCredentials(array(array('c1', 'c2')));
   $t->is($userMenu->checkUserAccess($user), true, '->checkUserAccess() supports the nesting of credentials to handle OR logic.');
+
+  $t->info('  4.2 - Test actsLikeFirst(), actsLikeLast()');
+  $user->setAuthenticated(false);
+  $userMenu = new ioMenuItem('user menu');
+
+  $t->info('    a) Create 3 normal children and as the actsLike methods on them');
+  $userMenu['ch1'];
+  $userMenu['ch2'];
+  $userMenu['ch3'];
+  $t->is($userMenu['ch1']->actsLikeFirst(), true, '->actsLikeFirst() returns true for the first child.');
+  $t->is($userMenu['ch2']->actsLikeFirst(), false, '->actsLikeFirst() returns false for the second child.');
+  $t->is($userMenu['ch3']->actsLikeLast(), true, '->actsLikeLast() returns true for the third child.');
+  $t->is($userMenu['ch2']->actsLikeLast(), false, '->actsLikeLast() returns false for the second child.');
+
+  $t->info('    b) Hide child 1 by making it require auth.');
+  $userMenu['ch1']->requiresAuth(true);
+  $t->is($userMenu['ch1']->actsLikeFirst(), false, '->actsLikeFirst() returns false for the first child, it is hidden.');
+  $t->is($userMenu['ch2']->actsLikeFirst(), true, '->actsLikeFirst() returns true for the second child, the first is hidden.');
+
+  $t->info('    c) Hide child 3 by making it require auth.');
+  $userMenu['ch3']->requiresAuth(true);
+  $t->is($userMenu['ch3']->actsLikeLast(), false, '->actsLikeLast() returns false for the third child, it is hidden.');
+  $t->is($userMenu['ch2']->actsLikeLast(), true, '->actsLikeLast() returns true for the second child, the third is hidden.');
 
 
 $t->info('5 - Check the "current" behavior.');
@@ -473,3 +498,4 @@ function check_test_tree(lime_test $t, ioMenuItem $menu)
   $t->is(count($menu['Parent 2']['Child 4']), 1, 'count(ch4) returns 1 child');
   $t->is_deeply($menu['Parent 2']['Child 4']['Grandchild 1']->getName(), 'Grandchild 1', 'gc1 has the name "Grandchild 1"');
 }
+
