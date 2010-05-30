@@ -76,24 +76,9 @@ $t->info('1 - Test basic getters, setters and constructor');
 
 
 $t->info('### Creating the test tree.');
-/*
- * Note: the root menu item should usually be an instance of ioMenu,
- *       which suppresses the excess li at the top level (so you only
- *       get the ul that wraps the children. We're avoiding that here
- *       because we're strictly testing ioMenuItem.
- */
-$menu = new ioMenuItemTest('Root li', null, array('class' => 'root'));
-$pt1 = $menu->getChild('Parent 1');
-$ch1 = $pt1->addChild('Child 1');
-$ch2 = $pt1->addChild('Child 2');
 
-// add the 3rd child via addChild with an object
-$ch3 = new ioMenuItemTest('Child 3');
-$pt1->addChild($ch3);
-
-$pt2 = $menu->getChild('Parent 2');
-$ch4 = $pt2->addChild('Child 4');
-$gc1 = $ch4->addChild('Grandchild 1');
+// create the tree and make the variables available
+extract(create_test_tree($t));
 
 
 $t->info('2 - Test the construction of trees');
