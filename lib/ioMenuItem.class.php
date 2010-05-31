@@ -1297,7 +1297,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function offsetGet($name)
   {
-    return $this->getChild($name);
+    return $this->getChild($name, false);
   }
 
   /**

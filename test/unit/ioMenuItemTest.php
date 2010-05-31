@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(168);
+$t = new lime_test(173);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -122,7 +122,19 @@ $t->info('2 - Test the construction of trees');
 
   // array access
   $t->info('  2.3 - Test ArrayAccess interface');
-  $t->is($menu['Parent 1']['Child 1'], $ch1, 'menu[Parent 1][Child 1] correctly returns the ch1 menu item.');
+  $aaMenu = new ioMenuItem('root');
+  $aaMenu->addChild('Child Menu');
+  $t->is($aaMenu['Child Menu']->getName(), 'Child Menu', 'menu[Child Menu] correctly returns the child menu called "Child Menu".');
+  $t->is($aaMenu['Fake'], null, 'menu[Fake] returns null - the menu item does not exist.');
+
+  $aaMenu['New Child'] = 'New Label';
+  $newChild = $aaMenu['New Child'];
+  $t->is(get_class($newChild), 'ioMenuItem', 'menu[New Child] = New Label creates a new ioMenuItem');
+  $t->is($newChild->getName(), 'New Child', 'The new menu item has name "New Child"');
+  $t->is($newChild->getLabel(), 'New Label', 'The new menu item has name "New Label"');
+
+  unset($aaMenu['New Child']);
+  $t->is(count($aaMenu), 1, 'unset(menu[New Child]) removes the menu item.');
 
   // countable
   $t->info('  2.4 - Test Countable interface');
@@ -147,7 +159,7 @@ $t->info('3 - Test child-related functionality.');
   // getChildren(), removeChildren()
   $children = $ch4->getChildren();
   $t->is(count($children), 1, '->getChildren() on ch4 returns only one child menu item');
-  $t->is($children[0]->name, $gc1->name, '->getChildren() on ch4 returns gc1 as the only menu item');
+  $t->is($children['Grandchild 1']->name, $gc1->name, '->getChildren() on ch4 returns gc1 as the only menu item');
 
   $t->info('  3.2 - Test ->getFirstChild(), getLastChild().');
   $t->is($menu->getFirstChild(), $pt1, '->getFirstChild() on rt returns pt1.');
@@ -157,8 +169,8 @@ $t->info('3 - Test child-related functionality.');
   $t->info('    a) Add a child (gc2) to ch4 via ->addChild().');
   $ch4->addChild('gc2');
   $t->is(count($ch4->getChildren()), 2, '->getChildren() on ch4 returns 2, reflecting the new child.');
-  $t->info('    a) Add a child (gc3) to ch4 via the ArrayAccess method.');
-  $ch4['gc3'];
+  $t->info('    b) Add a child (gc3) to ch4 via the ArrayAccess method.');
+  $ch4->addChild('gc3');
   $t->is(count($ch4->getChildren()), 3, '->getChildren() on ch4 returns 3, reflecting both new children.');
 
   $t->info('  3.4 - Test ->getChild()');
@@ -226,9 +238,9 @@ $t->info('4 - Check the credentials and security functions.');
   $userMenu = new ioMenuItemTest('user menu');
 
   $t->info('    a) Create 3 normal children and as the actsLike methods on them');
-  $userMenu['ch1'];
-  $userMenu['ch2'];
-  $userMenu['ch3'];
+  $userMenu->addChild('ch1');
+  $userMenu->addChild('ch2');
+  $userMenu->addChild('ch3');
   $t->is($userMenu['ch1']->actsLikeFirst(), true, '->actsLikeFirst() returns true for the first child.');
   $t->is($userMenu['ch2']->actsLikeFirst(), false, '->actsLikeFirst() returns false for the second child.');
   $t->is($userMenu['ch3']->actsLikeLast(), true, '->actsLikeLast() returns true for the third child.');
