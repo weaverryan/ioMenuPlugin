@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(180);
+$t = new lime_test(183);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -499,6 +499,13 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
     $test = new ioMenuItem('Imported');
     $test->fromArray($source);
     $t->is(get_class($test['Child 4']), 'ioMenuItemTest', 'The child menus correctly use their menu class.');
+
+  $t->info('    e) Test ::createFromArray().');
+    $source['class'] = 'ioMenu';
+    $newMenu = ioMenuItem::createFromArray($source);
+    $t->is(get_class($newMenu), 'ioMenu', 'The new menu is created with the correct class.');
+    $t->is($newMenu->getName(), 'Parent 2', 'The new menu has the correct name.');
+    $t->is(get_class($newMenu['Child 4']), 'ioMenuItemTest', 'The child menus correctly use their menu class.');
 
   // reset some settings
   $menu['Parent 2']->isCurrent(false);
