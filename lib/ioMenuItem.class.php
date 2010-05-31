@@ -1195,6 +1195,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     // export the children as well, unless explicitly disabled
     if ($withChildren)
     {
+      $array['children'] = array();
       foreach ($this->_children as $key => $child)
       {
         $array['children'][$key] = $child->toArray();

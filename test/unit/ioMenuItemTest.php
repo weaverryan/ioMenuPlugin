@@ -431,6 +431,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
             'requires_auth'     => false,
             'requires_no_auth'  => false,
             'credentials'       => array(),
+            'children'          => array(), // children exported even if empty, unless showChildren=false
           )
         )
       )
