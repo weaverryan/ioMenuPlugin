@@ -318,6 +318,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     {
       $child = $this->_createChild($child, $route, $attributes);
     }
+    elseif ($child->getParent())
+    {
+      throw new sfException('Cannot add menu item as child, it already belongs to another menu (e.g. has a parent).');
+    }
 
     $child->setParent($this);
     $child->showChildren($this->showChildren());

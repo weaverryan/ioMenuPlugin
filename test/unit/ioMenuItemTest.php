@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(173);
+$t = new lime_test(174);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -167,11 +167,22 @@ $t->info('3 - Test child-related functionality.');
 
   $t->info('  3.3 - Test ->addChild().');
   $t->info('    a) Add a child (gc2) to ch4 via ->addChild().');
-  $ch4->addChild('gc2');
-  $t->is(count($ch4->getChildren()), 2, '->getChildren() on ch4 returns 2, reflecting the new child.');
-  $t->info('    b) Add a child (gc3) to ch4 via the ArrayAccess method.');
-  $ch4->addChild('gc3');
-  $t->is(count($ch4->getChildren()), 3, '->getChildren() on ch4 returns 3, reflecting both new children.');
+    $ch4->addChild('gc2');
+    $t->is(count($ch4->getChildren()), 2, '->getChildren() on ch4 returns 2, reflecting the new child.');
+  $t->info('    b) Add a child (gc3) to ch4 by passing an object to addChild().');
+    $gc3 = new ioMenuItemTest('gc3');
+    $ch4->addChild($gc3);
+    $t->is(count($ch4->getChildren()), 3, '->getChildren() on ch4 returns 3, reflecting both new children.');
+  $t->info('    c) Try to add gc3 again, should throw an exception.');
+    try
+    {
+      $pt1->addChild($gc3);
+      $t->fail('Exception not thrown.');
+    }
+    catch (sfException $e)
+    {
+      $t->pass('Exception thrown');
+    }
 
   $t->info('  3.4 - Test ->getChild()');
   $t->is($ch4->getChild('Grandchild 1'), $gc1, '->getChild(Grandchild 1) returns gc1.');
