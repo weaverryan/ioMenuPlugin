@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(183);
+$t = new lime_test(182);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -54,8 +54,6 @@ $t->info('1 - Test basic getters, setters and constructor');
   $menu->requiresNoAuth(true);
   $t->is($menu->requiresNoAuth(), true, 'Calling ->requiresNoAuth() with an argument sets the property.');
 
-  $menu->setCredentials('c1');
-  $t->is($menu->getCredentials(), array('c1'), '->setCredentials() with a string sets the one credential.');
   $menu->setCredentials(array('c1', 'c2'));
   $t->is($menu->getCredentials(), array('c1', 'c2'), '->setCredentials() with an array sets all of the given credentials.');
 

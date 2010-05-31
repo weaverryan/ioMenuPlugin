@@ -270,9 +270,9 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * @param  mixed $credentials A string credential or array of credentials
    * @return ioMenuItem
    */
-  public function setCredentials($credentials)
+  public function setCredentials(array $credentials)
   {
-    $this->_credentials = is_string($credentials) ? explode(',', $credentials):(array) $credentials;
+    $this->_credentials = $credentials;
 
     return $this;
   }
