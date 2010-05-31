@@ -159,7 +159,7 @@ $t->info('3 - Test child-related functionality.');
   // getChildren(), removeChildren()
   $children = $ch4->getChildren();
   $t->is(count($children), 1, '->getChildren() on ch4 returns only one child menu item');
-  $t->is($children['Grandchild 1']->name, $gc1->name, '->getChildren() on ch4 returns gc1 as the only menu item');
+  $t->is($children['Grandchild 1']->getName(), $gc1->getName(), '->getChildren() on ch4 returns gc1 as the only menu item');
 
   $t->info('  3.2 - Test ->getFirstChild(), getLastChild().');
   $t->is($menu->getFirstChild(), $pt1, '->getFirstChild() on rt returns pt1.');

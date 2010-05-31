@@ -747,7 +747,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       }
 
       // opening li tag
-      $html .= $this->_format('<li'._tag_options($attributes).'>', 'li');
+      $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
 
       // render the text/link inside the li tag
       $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
