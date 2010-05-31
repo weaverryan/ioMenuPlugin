@@ -471,12 +471,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
-   * Used internally when adding children
+   * Used internally when adding and removing children
    *
    * @param ioMenuItem $parent
    * @return ioMenuItem
    */
-  public function setParent(ioMenuItem $parent)
+  public function setParent(ioMenuItem $parent = null)
   {
     return $this->_parent = $parent;
   }
@@ -590,6 +590,9 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     
     if (isset($this->_children[$name]))
     {
+      // unset the child and reset it so it looks independent
+      $this->_children[$name]->setParent(null);
+      $this->_children[$name]->setNum(null);
       unset($this->_children[$name]);
 
       // reset the "num" of all children since we just shook up the child list

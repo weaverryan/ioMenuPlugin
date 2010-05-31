@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(174);
+$t = new lime_test(175);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -192,10 +192,22 @@ $t->info('3 - Test child-related functionality.');
 
   $t->info('  3.5 - Test ->removeChildren()');
   $t->info('    a) ch4 now has 4 children (gc1, gc2, gc3, gc4). Remove gc4.');
+    $gc4 = $ch4['gc4']; // so we can try to re-add it later
     $ch4->removeChild('gc4');
     $t->is(count($ch4), 3, 'count(ch4) now returns only 3 children.');
     $t->is($ch4->getChild('Grandchild 1')->isFirst(), true, '->isFirst() on gc1 correctly returns true.');
     $t->is($ch4->getChild('gc3')->isLast(), true, '->isLast() on gc3 now returns true.');
+    $t->info('Now that gc4 has been removed, we can add it to another menu without an exception.');
+    $tmpMenu = new ioMenu();
+    try
+    {
+      $tmpMenu->addChild($gc4);
+      $t->pass('No exception thrown.');
+    }
+    catch (sfException $e)
+    {
+      $t->fail('Exception still thrown: ' . $e->getMessage());
+    }
 
   $t->info('    b) ch4 now has 3 children (gc1, gc2, gc3). Remove gc2.');
     $ch4->removeChild('gc2');
