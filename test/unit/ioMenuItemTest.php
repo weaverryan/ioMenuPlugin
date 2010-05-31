@@ -192,28 +192,28 @@ $t->info('3 - Test child-related functionality.');
 
   $t->info('  3.5 - Test ->removeChildren()');
   $t->info('    a) ch4 now has 4 children (gc1, gc2, gc3, gc4). Remove gc4.');
-  $ch4->removeChild('gc4');
-  $t->is(count($ch4), 3, 'count(ch4) now returns only 3 children.');
-  $t->is($ch4->getChild('Grandchild 1')->isFirst(), true, '->isFirst() on gc1 correctly returns true.');
-  $t->is($ch4->getChild('gc3')->isLast(), true, '->isLast() on gc3 now returns true.');
+    $ch4->removeChild('gc4');
+    $t->is(count($ch4), 3, 'count(ch4) now returns only 3 children.');
+    $t->is($ch4->getChild('Grandchild 1')->isFirst(), true, '->isFirst() on gc1 correctly returns true.');
+    $t->is($ch4->getChild('gc3')->isLast(), true, '->isLast() on gc3 now returns true.');
 
   $t->info('    b) ch4 now has 3 children (gc1, gc2, gc3). Remove gc2.');
-  $ch4->removeChild('gc2');
-  $t->is(count($ch4), 2, 'count(ch4) now returns only 2 children.');
-  $t->is($ch4->getChild('Grandchild 1')->isFirst(), true, '->isFirst() on gc1 correctly returns true.');
-  $t->is($ch4->getChild('gc3')->isLast(), true, '->isLast() on gc3 now returns true');
-  $t->is($gc1->getNum(), 1, '->getNum() on gc1 returns 1');
-  $t->is($ch4->getChild('gc3')->getNum(), 2, '->getNum() on gc3 returns 2');
+    $ch4->removeChild('gc2');
+    $t->is(count($ch4), 2, 'count(ch4) now returns only 2 children.');
+    $t->is($ch4->getChild('Grandchild 1')->isFirst(), true, '->isFirst() on gc1 correctly returns true.');
+    $t->is($ch4->getChild('gc3')->isLast(), true, '->isLast() on gc3 now returns true');
+    $t->is($gc1->getNum(), 1, '->getNum() on gc1 returns 1');
+    $t->is($ch4->getChild('gc3')->getNum(), 2, '->getNum() on gc3 returns 2');
 
   $t->info('    c) ch4 now has 2 children (gc1, gc3). Remove gc3.');
-  $ch4->removeChild('gc3');
-  $t->is(count($ch4), 1, 'count(ch4) now returns only 1 child.');
-  $t->is($gc1->isFirst(), true, '->isFirst() on gc1 returns true.');
-  $t->is($gc1->isLast(), true, '->isLast() on gc1 returns true.');
+    $ch4->removeChild('gc3');
+    $t->is(count($ch4), 1, 'count(ch4) now returns only 1 child.');
+    $t->is($gc1->isFirst(), true, '->isFirst() on gc1 returns true.');
+    $t->is($gc1->isLast(), true, '->isLast() on gc1 returns true.');
 
   $t->info('    d) try to remove a non-existent child.');
-  $ch4->removeChild('fake');
-  $t->is(count($ch4), 1, '->removeChildren() with a non-existent child does nothing');
+    $ch4->removeChild('fake');
+    $t->is(count($ch4), 1, '->removeChildren() with a non-existent child does nothing');
 
 $t->info('4 - Check the credentials and security functions.');
 
