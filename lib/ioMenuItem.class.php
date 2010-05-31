@@ -308,15 +308,16 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    *
    * @param mixed   $child    An ioMenuItem object or the name of a new menu to create
    * @param string  $route    If creating a new menu, the route for that menu
-   * @param string  attributes  If creating a new menu, the attributes for that menu
+   * @param string  $attributes  If creating a new menu, the attributes for that menu
+   * @param string  $class    The class for menu item, if it needs to be created
    *
    * @return ioMenuItem The child menu item
    */
-  public function addChild($child, $route = null, $attributes = array())
+  public function addChild($child, $route = null, $attributes = array(), $class = null)
   {
     if (!$child instanceof ioMenuItem)
     {
-      $child = $this->_createChild($child, $route, $attributes);
+      $child = $this->_createChild($child, $route, $attributes, $class);
     }
     elseif ($child->getParent())
     {
@@ -572,9 +573,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * 
    * @return ioMenuItem
    */
-  protected function _createChild($name, $route = null, $attributes)
+  protected function _createChild($name, $route = null, $attributes = array(), $class = null)
   {
-    $class = get_class($this);
+    if ($class === null)
+    {
+      $class = get_class($this);
+    }
 
     return new $class($name, $route, $attributes);
   }

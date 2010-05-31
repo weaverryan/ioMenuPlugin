@@ -37,10 +37,13 @@ class ioMenu extends ioMenuItem
   /**
    * Overridden to specify what the child class should be
    */
-  protected function _createChild($name, $route = null, $options)
+  protected function _createChild($name, $route = null, $attributes = array(), $class = null)
   {
-    $class = $this->_childClass;
+    if ($class === null)
+    {
+      $class = $this->_childClass;
+    }
 
-    return new $class($name, $route, $options);
+    return parent::_createChild($name, $route, $attributes, $class);
   }
 }
