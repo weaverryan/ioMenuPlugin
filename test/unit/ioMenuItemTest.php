@@ -394,44 +394,44 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
   $menu['Parent 2']->isCurrent(true);
   $menu['Parent 2']->setAttribute('class', 'parent2');
   $t->is($menu['Parent 2']->toArray(), array(
-    'name'            => 'Parent 2',
-    'label'           => null,
-    'route'           => null,
-    'attributes'      => array('class' => 'parent2'),
-    'requiresAuth'    => false,
-    'requiresNoAuth'  => false,
-    'credentials'     => array(),
-    'children'        => array(
-      'Child 4'         => array(
-        'name'            => 'Child 4',
-        'label'           => null,
-        'route'           => null,
-        'attributes'      => array(),
-        'requiresAuth'    => false,
-        'requiresNoAuth'  => false,
-        'credentials'     => array(),
-        'children'        => array(
-          'Grandchild 1'    => array(
-            'name'            => 'Grandchild 1',
-            'label'           => null,
-            'route'           => null,
-            'attributes'      => array(),
-            'requiresAuth'    => false,
-            'requiresNoAuth'  => false,
-            'credentials'     => array(),
+    'name'              => 'Parent 2',
+    'label'             => null,
+    'route'             => null,
+    'attributes'        => array('class' => 'parent2'),
+    'requires_auth'     => false,
+    'requires_no_auth'  => false,
+    'credentials'       => array(),
+    'children'          => array(
+      'Child 4'           => array(
+        'name'              => 'Child 4',
+        'label'             => null,
+        'route'             => null,
+        'attributes'        => array(),
+        'requires_auth'     => false,
+        'requires_no_auth'  => false,
+        'credentials'       => array(),
+        'children'          => array(
+          'Grandchild 1'      => array(
+            'name'              => 'Grandchild 1',
+            'label'             => null,
+            'route'             => null,
+            'attributes'        => array(),
+            'requires_auth'     => false,
+            'requires_no_auth'  => false,
+            'credentials'       => array(),
           )
         )
       )
     )
   ), 'Test toArray() on pt2');
   $t->is($menu['Parent 2']->toArray(false), array(
-    'name'            => 'Parent 2',
-    'label'           => null,
-    'route'           => null,
-    'attributes'      => array('class' => 'parent2'),
-    'requiresAuth'    => false,
-    'requiresNoAuth'  => false,
-    'credentials'     => array(),
+    'name'              => 'Parent 2',
+    'label'             => null,
+    'route'             => null,
+    'attributes'        => array('class' => 'parent2'),
+    'requires_auth'     => false,
+    'requires_no_auth'  => false,
+    'credentials'       => array(),
   ), 'Test toArray() without children on pt2');
 
   $t->info('    b) Test ->fromArray(), sourcing from p2');

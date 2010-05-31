@@ -1177,19 +1177,18 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public function toArray($withChildren = true)
   {
     $fields = array(
-      'name',
-      'label',
-      'route',
-      'attributes',
-      'requiresAuth',
-      'requiresNoAuth',
-      'credentials',
+      '_name'           => 'name',
+      '_label'          => 'label',
+      '_route'          => 'route',
+      '_attributes'     => 'attributes',
+      '_requiresAuth'   => 'requires_auth',
+      '_requiresNoAuth' => 'requires_no_auth',
+      '_credentials'    => 'credentials',
     );
     $array = array();
 
-    foreach ($fields as $field)
+    foreach ($fields as $propName => $field)
     {
-      $propName = '_'.$field;
       $array[$field] = $this->$propName;
     }
 
@@ -1230,14 +1229,14 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $this->setAttributes($array['attributes']);
     }
 
-    if (isset($array['requiresAuth']))
+    if (isset($array['requires_auth']))
     {
-      $this->requiresAuth($array['requiresAuth']);
+      $this->requiresAuth($array['requires_auth']);
     }
     
-    if (isset($array['requiresNoAuth']))
+    if (isset($array['requires_no_auth']))
     {
-      $this->requiresNoAuth($array['requiresNoAuth']);
+      $this->requiresNoAuth($array['requires_no_auth']);
     }
 
     if (isset($array['credentials']))
