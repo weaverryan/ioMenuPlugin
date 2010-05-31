@@ -1203,6 +1203,9 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $array[$field] = $this->$propName;
     }
 
+    // record this class name so this item can be recreated with the same class
+    $array['class'] = get_class($this);
+
     // export the children as well, unless explicitly disabled
     if ($withChildren)
     {
@@ -1260,7 +1263,9 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     {
       foreach ($array['children'] as $name => $child)
       {
-        $this->addChild($name)->fromArray($child);
+        $class = isset($child['class']) ? $child['class'] : get_class($this);
+        // create the child with the correct class
+        $this->addChild($name, null, array(), $class)->fromArray($child);
       }
     }
 

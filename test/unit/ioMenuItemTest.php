@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(177);
+$t = new lime_test(180);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -441,6 +441,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
     'requires_auth'     => false,
     'requires_no_auth'  => false,
     'credentials'       => array(),
+    'class'             => 'ioMenuItemTest',
     'children'          => array(
       'Child 4'           => array(
         'name'              => 'Child 4',
@@ -450,6 +451,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
         'requires_auth'     => false,
         'requires_no_auth'  => false,
         'credentials'       => array(),
+        'class'             => 'ioMenuItemTest',
         'children'          => array(
           'Grandchild 1'      => array(
             'name'              => 'Grandchild 1',
@@ -459,6 +461,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
             'requires_auth'     => false,
             'requires_no_auth'  => false,
             'credentials'       => array(),
+            'class'             => 'ioMenuItemTest',
             'children'          => array(), // children exported even if empty, unless showChildren=false
           )
         )
@@ -473,12 +476,29 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
     'requires_auth'     => false,
     'requires_no_auth'  => false,
     'credentials'       => array(),
+    'class'             => 'ioMenuItemTest',
   ), 'Test toArray() without children on pt2');
 
   $t->info('    b) Test ->fromArray(), sourcing from p2');
-  $test = new ioMenuItemTest('Imported');
-  $test->fromArray($menu['Parent 2']->toArray());
-  $t->is($test->toArray(), $menu['Parent 2']->toArray(), 'Creating a new menu item from pt2\'s source gives us an identical menu.');
+    $test = new ioMenuItemTest('Imported');
+    $test->fromArray($menu['Parent 2']->toArray());
+    $t->is($test->toArray(), $menu['Parent 2']->toArray(), 'Creating a new menu item from pt2\'s source gives us an identical menu.');
+
+  $t->info('    c) Test ->fromArray(), but put it into a menu of a different class');
+    $test = new ioMenuItem('Imported');
+    $test->fromArray($menu['Parent 2']->toArray());
+    $targetArr = $menu['Parent 2']->toArray();
+    // the top level menu will be different, but the children will all have the old correct ioMenuItemTest class
+    $targetArr['class'] = 'ioMenuItem';
+    $t->is($test->toArray(), $targetArr, 'The menu sourced from pt2 is identical, except the parent class was changed.');
+    $t->is(get_class($test['Child 4']), 'ioMenuItemTest', 'The child menus correctly use their menu class.');
+
+  $t->info('    d) Test ->fromArray() with different class keys');
+    $source = $menu['Parent 2']->toArray();
+    $source['class'] = 'ioMenuItem';
+    $test = new ioMenuItem('Imported');
+    $test->fromArray($source);
+    $t->is(get_class($test['Child 4']), 'ioMenuItemTest', 'The child menus correctly use their menu class.');
 
   // reset some settings
   $menu['Parent 2']->isCurrent(false);
