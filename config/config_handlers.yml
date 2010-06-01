@@ -1,0 +1,2 @@
+config/navigation.yml:
+  class: ioMenuConfigHandler
