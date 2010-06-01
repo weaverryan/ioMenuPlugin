@@ -1359,7 +1359,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function __call($method, $arguments)
   {
-    $name .= 'io.menu.method_not_found';
+    $name = 'io.menu.method_not_found';
 
     $event = sfProjectConfiguration::getActive()->getEventDispatcher()->notifyUntil(new sfEvent($this, $name, array('method' => $method, 'arguments' => $arguments)));
     if (!$event->isProcessed())
