@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * define ioMenus in a nifty yaml file that could be cached
+ *
+ * @see navigation.sample.yml
+ * @author digitalkaoz
+ */
 class ioMenuConfigHandler extends sfYamlConfigHandler
 {
   private $buffer = "<?php\n";
@@ -75,6 +80,14 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     }
   }
 
+  /**
+   * parses the attributes to a string for menus and items
+   *
+   * @param array $item
+   * @param string $menu
+   * @param boolean $keys
+   * @return string
+   */
   protected function parseAttributes($item, $menu=false, $keys=true) {
     $attrs = array();
 
@@ -91,6 +104,13 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     }
   }
 
+  /**
+   * adds a item to the buffer
+   *
+   * @param array $item
+   * @param string $menu
+   * @param array $anchor
+   */
   protected function addItem($item, $menu, $anchor = null) {
     $attrs = $this->parseAttributes($item, $menu);
 
@@ -107,6 +127,12 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     }
   }
 
+  /**
+   * get the security settings for a route
+   *
+   * @param sfRoute $route
+   * @return array
+   */
   protected function getSecurityForRoute(sfRoute $route) {
     //bad dependency
     $config = sfContext::getInstance()->getConfiguration();
@@ -120,7 +146,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     if (file_exists($moduleCfg)) {
       $file = $moduleCfg;
     } elseif (file_exists($pluginCfg)) {
-      
+      //TODO
     } else {
       $file = $appCfg;
     }
@@ -128,6 +154,12 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     return sfSecurityConfigHandler::getConfiguration(array($file));
   }
 
+  /**
+   * get the credentials for an item
+   *
+   * @param array $item
+   * @return mixed
+   */
   protected function getCredentials($item) {
     //bad sfContext dependencies
     $routes = sfContext::getInstance()->getRouting()->getRoutes();
