@@ -2,13 +2,13 @@
 
 /**
  * caches the ioMenus defined in the navigation.yml
- *   - you can infinity nest the menus
+ *   - you can infinite nest the menus
  *   - seamless fetching of security settings from security.yml
  *
  * @package     ioMenuPlugin
  * @subpackage  config
  * @author      Robert Schönthal <seroscho@googlemail.com>
- * @see         navigation.sample.yml
+ * @see         navigation.sample.yml for configuration hints
  */
 class ioMenuConfigHandler extends sfYamlConfigHandler
 {
@@ -27,6 +27,13 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   private $menus = array();
 
   /**
+   * the sfContext
+   *
+   * @var sfContext
+   */
+  private $context;
+
+  /**
    * executes the config files
    *
    * @param array $configFiles
@@ -34,6 +41,8 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   public function execute($configFiles)
   {
     $config = $this->parseYamls($configFiles);
+    
+    $this->setContext();
 
     if (!$config)
     {
@@ -120,7 +129,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
 
     if ($credentials = $this->getCredentials($item))
     {
-      $this->buffer .= sprintf("\$item_%s->setCredentials(%s);\n", $item['route'], $credentials);
+      $this->buffer .= sprintf("\$item_%s->setCredentials(%s);\n", $item['route'], $this->var_export_nokeys($credentials));
     }
   }
 
@@ -143,33 +152,70 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     }
   }
 
+  /**
+   * sets the sfContext
+   *
+   * @param sfContext $context
+   */
+  public function setContext(sfContext $context=null)
+  {
+    $this->context = $context ? $context : sfContext::getInstance();
+  }
 
   /**
    * get the security settings for a route
    *
    * @param sfRoute $route
    * @return array
-   * @todo cleanup
    */
-  protected function getSecurityForRoute(sfRoute $route) {
-    //bad dependency
-    $config = sfContext::getInstance()->getConfiguration();
-    $route_defaults = $route->getDefaults();
+  protected function getSecurityConfigForRoute(sfRoute $route)
+  {
+    $route_defaults = $route->getDefaultParameters();
+    $module = $route_defaults['module'];
+    $config = $this->context->getConfiguration();
+    $finder = new sfFinder();
 
-    $moduleCfg = $config->getRootDir() . '/apps/' . $config->getApplication() . '/modules/' . $route_defaults['module'] . '/config/security.yml';
-    //TODO
-    $pluginCfg = $config->getRootDir() . '/plugins/' . $config->getApplication() . '/modules/' . $route_defaults['module'] . '/config/security.yml';
-    $appCfg = $config->getRootDir() . '/apps/' . $config->getApplication() . '/config/security.yml';
+    $files = array(
+      $config->getRootDir().'/apps/'.$config->getApplication().'/modules/'.$route_defaults['module'].'/config/security.yml',
+      $config->getRootDir().'/apps/'.$config->getApplication().'/config/security.yml',
+      //$finder->ignore_version_control()->type('file')->name($route_defaults['module'].'/config/security.yml')->in($config->getRootDir().'/plugins')
+    );
 
-    if (file_exists($moduleCfg)) {
-      $file = $moduleCfg;
-    } elseif (file_exists($pluginCfg)) {
-      //TODO
-    } else {
-      $file = $appCfg;
+    foreach($files as $k => $file)
+    {
+      if(!file_exists($file))
+      {
+        unset($files[$k]);
+      }
     }
 
-    return sfSecurityConfigHandler::getConfiguration(array($file));
+    return sfSecurityConfigHandler::getConfiguration($files);
+  }
+
+  /**
+   * extracts the sfRoute from the item if exists
+   *
+   * @param array $item
+   * @return mixed
+   */
+  protected function getRouteFromItem($item)
+  {
+    $config = $this->context->getConfiguration();
+    $routes = $this->context->getRouting()->getRoutes();
+
+    $routeName = $item['route'];
+
+    if(strpos($routeName, '?'))
+    {
+      $routeName = substr($routeName, 0, strpos($$routeName, '?'));
+    }
+
+    if (!array_key_exists($routeName, $routes))
+    {
+      return false;
+    }
+
+    return $routes[$routeName];
   }
 
   /**
@@ -177,36 +223,30 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
    *
    * @param array $item
    * @return mixed
-   * @todo cleanup
    */
-  protected function getCredentials($item) {
-    //bad sfContext dependencies
-    $routes = sfContext::getInstance()->getRouting()->getRoutes();
+  protected function getCredentials($item)
+  {
+    $route = $this->getRouteFromItem($item);
 
-    if (!array_key_exists(substr($item['route'], 0, strpos($item['route'], '?')), $routes)) {
+    if(!$route)
+    {
       return false;
     }
 
-    $route = $routes[$item['route']];
+    $security = $this->getSecurityConfigForRoute($route);
 
-    if ($security = $this->getSecurityForRoute($route)) {
-      $defaults = $route->getDefaults();
+    $route_defaults = $route->getDefaultParameters();
+    $action = $route_defaults['action'];
 
-      foreach (array('action', 'all', 'default') as $key) {
-        if (!isset($defaults[$key])) {
-          continue;
-        }
-        $cfg = $defaults[$key];
-
-        if (array_key_exists($cfg, $security)) {
-          if ($security[$cfg]['is_secure'] == 'on') {
-            $config = isset($security[$cfg]['credentials']) ? $security[$cfg]['credentials'] : false;
-          }
-        }
+    foreach(array($action,'all','default') as $dataset)
+    {
+      if(isset($security[$dataset]) && $security[$dataset]['is_secure'] == 'on')
+      {
+        $set = $security[$dataset]['credentials'];
       }
     }
 
-    return isset($config) ? $config : false;
+    return isset($set) ? $set : false;
   }
 
   /**
