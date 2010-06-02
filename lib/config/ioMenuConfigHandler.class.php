@@ -1,14 +1,30 @@
 <?php
+
 /**
- * define ioMenus in a nifty yaml file that could be cached
+ * caches the ioMenus defined in the navigation.yml
+ *   - you can infinity nest the menus
+ *   - seamless fetching of security settings from security.yml
  *
- * @see navigation.sample.yml
- * @author digitalkaoz
+ * @package     ioMenuPlugin
+ * @subpackage  config
+ * @author      Robert Schönthal <seroscho@googlemail.com>
+ * @see         navigation.sample.yml
  */
 class ioMenuConfigHandler extends sfYamlConfigHandler
 {
+  /**
+   * holds the config cache buffer
+   *
+   * @var string
+   */
   private $buffer = "<?php\n";
-  private $menus;
+
+  /**
+   * holds the menu instances
+   *
+   * @var array
+   */
+  private $menus = array();
 
   /**
    * executes the config files
@@ -19,7 +35,8 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   {
     $config = $this->parseYamls($configFiles);
 
-    if (!$config) {
+    if (!$config)
+    {
       return;
     }
 
@@ -29,7 +46,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   }
 
   /**
-   * iterate over the various menus
+   * iterate over the defined menus
    *
    * @param array $config
    */
@@ -39,7 +56,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   }
 
   /**
-   * iterate over various items within a menu
+   * iterate over items within a menu
    *
    * @param array $menu
    * @param string $name
@@ -67,71 +84,72 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   /**
    * parses a menu item
    *
-   * @todo
+   * @param array $item
+   * @param string $name
+   * @param string $menu
+   * @param array $root
+   * 
+   * @todo too many parameters
    */
-  protected function parseItem($item, $name, $menu, $data=null, $root=null)
+  protected function parseItem($item, $name, $menu, $anchor=null)
   {
-    $this->buffer .= $this->addItem($item, $menu, $root);
+    $this->createItem($item, $menu);
+    $this->addItem($item, $menu, $anchor);
 
-    if (array_key_exists('children', $item)) {
-      foreach ($item['children'] as $childName => $child) {
-        $this->parseItem($child, $childName, $menu, $data, $item);
+    //recursivly scan and add child items
+    if (array_key_exists('children', $item))
+    {
+      foreach ($item['children'] as $childName => $child)
+      {
+        $this->parseItem($child, $childName, $menu, $item);
       }
     }
   }
 
   /**
-   * parses the attributes to a string for menus and items
+   * creates a menu item
    *
    * @param array $item
    * @param string $menu
-   * @param boolean $keys
-   * @return string
    */
-  protected function parseAttributes($item, $menu=false, $keys=true) {
-    $attrs = array();
+  protected function createItem($item, $menu)
+  {
+    $attrs = $this->parseAttributes($item, $menu);
 
-    if ($menu) {
-      $attrs = isset($item['_attributes']) ? $item['_attributes'] : $this->menus[$menu]['item_attributes'];
-    } else {
-      $attrs = isset($item['menu_attributes']) ? $item['menu_attributes'] : array();
-    }
+    $this->buffer .= sprintf("\$item_%s = new ioMenuItem('%s','@%s',%s);\n", $item['route'], $item['name'], $item['route'], $attrs);
 
-    if ($keys) {
-      return str_replace('"', "'", var_export($attrs, true));
-    } else {
-      return str_replace('"', "'", $this->var_export_nokeys($attrs));
+    if ($credentials = $this->getCredentials($item))
+    {
+      $this->buffer .= sprintf("\$item_%s->setCredentials(%s);\n", $item['route'], $credentials);
     }
   }
 
   /**
-   * adds a item to the buffer
+   * adds a menu item to another item or to a menu
    *
    * @param array $item
    * @param string $menu
    * @param array $anchor
    */
-  protected function addItem($item, $menu, $anchor = null) {
-    $attrs = $this->parseAttributes($item, $menu);
-
-    $this->buffer .= sprintf("\$item_%s = new ioMenuItem('%s','@%s',%s);\n", $item['route'], $item['name'], $item['route'], $attrs);
-
-    if ($credentials = $this->getCredentials($item)) {
-      $this->buffer .= sprintf("\$item_%s->setCredentials(%s);\n", $item['route'], $credentials);
-    }
-
-    if ($anchor) {
+  protected function addItem($item, $menu, $anchor=false)
+  {
+    if ($anchor)
+    {
       $this->buffer .= sprintf("\$item_%s->addChild(\$item_%s);\n", $anchor['route'], $item['route']);
-    } else {
+    }
+    else
+    {
       $this->buffer .= sprintf("\$%s->addChild(\$item_%s);\n", $menu, $item['route']);
     }
   }
+
 
   /**
    * get the security settings for a route
    *
    * @param sfRoute $route
    * @return array
+   * @todo cleanup
    */
   protected function getSecurityForRoute(sfRoute $route) {
     //bad dependency
@@ -159,6 +177,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
    *
    * @param array $item
    * @return mixed
+   * @todo cleanup
    */
   protected function getCredentials($item) {
     //bad sfContext dependencies
@@ -190,7 +209,71 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     return isset($config) ? $config : false;
   }
 
-  protected function var_export_nokeys($obj) {
+  /**
+   * parses the attributes to a string for menus and items
+   *
+   * @param array $item
+   * @param string $menu
+   * @param boolean $keys
+   * @return string
+   */
+  protected function parseAttributes($item, $menu=false, $keys=true)
+  {
+    $attrs = $this->getAttributesFromItem($item, $menu);
+
+    return $this->exportAttributes($attrs, $keys);
+  }
+
+  /**
+   * parses an array to a string representation, with or without keys
+   *
+   * @param array $attrs
+   * @param string $keys
+   * @return string
+   */
+  protected function exportAttributes($attrs, $keys)
+  {
+    if ($keys)
+    {
+      return str_replace('"', "'", var_export($attrs, true));
+    }
+    else
+    {
+      return str_replace('"', "'", $this->var_export_nokeys($attrs));
+    }
+  }
+
+  /**
+   * read the attributes from an item (works for items and menus) and respects the configuration cascade
+   *
+   * @param array $item
+   * @param string $menu
+   * @return array
+   */
+  protected function getAttributesFromItem($item, $menu=false)
+  {
+    $attrs = array();
+
+    if ($menu)
+    {
+      $attrs = isset($item['_attributes']) ? $item['_attributes'] : $this->menus[$menu]['item_attributes'];
+    }
+    else
+    {
+      $attrs = isset($item['menu_attributes']) ? $item['menu_attributes'] : array();
+    }
+
+    return $attrs;
+  }
+
+  /**
+   * exports an object as array without keys
+   *
+   * @param mixed $obj
+   * @return string
+   */
+  protected function var_export_nokeys($obj)
+  {
     return preg_replace("/'?\w+'?\s+=>\s+/", '', var_export($obj, true));
   }
 
