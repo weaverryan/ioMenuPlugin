@@ -8,7 +8,11 @@ if (!isset($_SERVER['SYMFONY']))
 require_once $_SERVER['SYMFONY'].'/autoload/sfCoreAutoload.class.php';
 sfCoreAutoload::register();
 
-$configuration = new sfProjectConfiguration(dirname(__FILE__).'/../fixtures/project');
+$projectPath = dirname(__FILE__).'/../fixtures/project';
+/** configuration of the fixture project */
+require_once($projectPath.'/config/ProjectConfiguration.class.php');
+$configuration = new ProjectConfiguration($projectPath);
+
 require_once $configuration->getSymfonyLibDir().'/vendor/lime/lime.php';
 
 function ioMenuPlugin_autoload_again($class)

@@ -242,7 +242,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     {
       if(isset($security[$dataset]) && $security[$dataset]['is_secure'] == 'on')
       {
-        $set = $security[$dataset]['credentials'];
+        $set = isset($security[$dataset]['credentials']) ? $security[$dataset]['credentials'] : false;
       }
     }
 

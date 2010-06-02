@@ -1,0 +1,45 @@
+#menuName:
+#  menu_attributes: []
+#  item_attributes: []
+#  items:           []
+
+#the main menu
+mainMenu:
+  menu_attributes:
+    class: 'menuCls'
+    id:    'nav'
+  item_attributes:
+    class: 'itemCls'
+
+  items:
+    -
+      _attributes:
+        class: 'foo'
+      name: Homepage
+      route: homepage
+      children:
+        -
+          _attributes:
+            id:  'user'
+          name:  Default
+          route: default
+
+adminMenu:
+  menu_attributes:
+    class: 'menuCls'
+    id:    'nav'
+  item_attributes:
+    class: 'itemCls'
+
+  items:
+    -
+      _attributes:
+        class: 'foo'
+      name: Homepage
+      route: homepage
+      children:
+        -
+          _attributes:
+            id:  'user'
+          name:  Default
+          route: default

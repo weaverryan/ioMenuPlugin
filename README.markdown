@@ -62,3 +62,64 @@ Assuming you're in the /my-comments page, the output would be:
         </ul>
       </li>
     </ul>
+
+If you are willing to define your menus in a yaml file, you can do so by create a navigation.yml in your app config folder:
+
+    #the main menu
+    mainMenu:
+      menu_attributes:
+        class: 'menuCls'
+        id:    'nav'
+      item_attributes:
+        class: 'itemCls'
+
+      items:
+        -
+          _attributes:
+            class: 'foo'
+          name: Homepage
+          route: homepage
+          children:
+            -
+              _attributes:
+                id:  'user'
+              name:  Default
+              route: default
+
+    #the admin menu
+    adminMenu:
+      menu_attributes:
+        class: 'menuCls'
+        id:    'nav'
+      item_attributes:
+        class: 'itemCls'
+
+      items:
+        -
+          _attributes:
+            class: 'foo'
+          name: Admin Homepage
+          route: homepage
+          children:
+            -
+              _attributes:
+                id:  'user'
+              name:  Admin Default
+              route: default
+
+The default symfony security settings will be merged into this structure (currently it only respects credentials) from the corresponding security.yml file for each route.
+
+To retrieve those cached menu easily, use the *ioMenu* helper, activate it in your settings.yml
+
+To finally fetch a menu, use:
+
+    $menu = get_menu('mainMenu');
+    echo $menu->render();
+
+    $menu = get_menu('adminMenu');
+    echo $menu->render();
+
+TODO
+-----
+
+  - test the config handler and the generated menu cache
