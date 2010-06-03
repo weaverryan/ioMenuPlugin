@@ -6,7 +6,8 @@ site - can range from simple, mundane tasks to giant monsters of headache
 and code.
 
 This plugin solves the issue by giving you a small, yet powerful and flexible
-framework for handling your menus.
+framework for handling your menus. While most of the examples shown here
+are simple, the menus can grow arbitrarily large and deep.
 
 Creating a menu
 ---------------
@@ -37,6 +38,11 @@ The above would render the following html code:
 >class is added to the "current" menu item by url. The above example assumes
 >the menu is being rendered on the `/comments` page, making the comments
 >menu item "current".
+
+>**NOTE**
+>When the menu is rendered, it's actually spaced correctly so that it appears
+>as shown in the source html. This is to allow for easier debugging and can
+>be turned off by calling `ioMenuItem::$renderCompressed = true`.
 
 Working with your menu tree
 ---------------------------

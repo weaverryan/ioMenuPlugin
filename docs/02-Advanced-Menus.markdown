@@ -130,3 +130,38 @@ The `$newMenu` menu tree will be identical to the original menu tree. This
 means that, for example, menus can be specified entirely in `app.yml` and
 then easily used to create menu trees. More on that in chapter 3.
 
+Breadcrumbs
+-----------
+
+Though not meant to be a breadcrumb solution, the ioMenuPlugin can return
+an array that's ready to be used for breadcrumbs. This does not currently
+identify your current menu item automatically. Rather, you specify which
+breadcrumb array you need:
+
+    $breadcrumbArray = $menu['overview']['about']->getBreadcrumbsArray();
+    foreach ($breadcrumbs as $label => $url)
+    {
+      echo '<li>'.link_to($label, $url).'</li>';
+    }
+
+Admin Menus
+-----------
+
+Normally, if you need a node of a menu item to display or not display
+based on credentials, you simply add those conditions to the particular
+node in question. In some cases, you may want to hide a node entirely if
+all of its children are hidden. A good example would be an admin menu:
+
+    $menu = new ioMenuAdminItem('Admin menu');
+    $menu->addChild('User Admin');
+    $menu['User Admin']->addChild('Manage Users')
+      ->setCredentials(array('ManageUsers'));
+    $menu['User Admin']->addChild('Manage Permissions')
+      ->setCredentials(array('ManagePermissions'));
+
+In this case, you'd want to hide the "User Admin" menu node entirely if
+both the "Manage Users" and "Manage Permissions" child menu items are
+hidden due to lack of credentials. By using the special `ioMenuAdminItem`
+class, this behavior will happen automatically.
+
+--->To continue reading, see Chapter 3: Importing from YAML and the database
