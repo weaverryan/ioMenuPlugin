@@ -736,7 +736,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       {
         $class[] = 'current';
       }
-      elseif ($this->isCurrentAncestor())
+      elseif ($this->isCurrentAncestor($depth))
       {
         $class[] = 'current_ancestor';
       }
@@ -979,11 +979,17 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    *
    * @return boolean
    */
-  public function isCurrentAncestor()
+  public function isCurrentAncestor($depth = null)
   {
+    // if children not shown, then we're definitely not a visible ancestor
+    if (!$this->showChildren() || $depth === 0)
+    {
+      return false;
+    }
+
     foreach ($this->getChildren() as $child)
     {
-      if ($child->isCurrent() || $child->isCurrentAncestor())
+      if ($child->isCurrent() || $child->isCurrentAncestor($depth - 1))
       {
         return true;
       }

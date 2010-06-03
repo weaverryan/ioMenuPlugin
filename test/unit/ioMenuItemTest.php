@@ -549,14 +549,19 @@ $t->info('8 - Test the render() method.');
   $menu->showChildren(true); // replace the setting
 
   $menu['Parent 1']->showChildren(false);
-  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
-  $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children.');
+  $rendered = '<ul class="root"><li class="first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
+  $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children. pt1 is also no longer a current ancestor.');
   $menu['Parent 1']->showChildren(true); // replace the setting
+
+//  $menu['Parent 1']->show(false);
+//  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
+//  $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children.');
+//  $menu['Parent 1']->showChildren(true); // replace the setting
 
   $t->info('  8.7 - Test the depth argument on ->render()');
   $t->is($menu->render(0), '', '->render(0) returns an empty string.');
 
-  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul>';
+  $rendered = '<ul class="root"><li class="first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2</li></ul>';
   $t->is($menu->render(1), $rendered, '->render(1) returns only the pt1 and pt2 elements');
 
   $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li class="current">Child 2</li><li class="last">Child 3</li></ul></li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4</li></ul></li></ul>';
@@ -567,7 +572,7 @@ $t->info('8 - Test the render() method.');
 
   $t->info('    Use render(2) but set pt1\'s showChildren() to false.');
   $menu['Parent 1']->showChildren(false);
-  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4</li></ul></li></ul>';
+  $rendered = '<ul class="root"><li class="first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4</li></ul></li></ul>';
   $t->is($menu->render(2), $rendered, 'Displays ch4 and not gc1 because depth = 2. Hides ch1-3 because showChildren() is false on pt1.');
 
 
