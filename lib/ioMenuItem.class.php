@@ -727,50 +727,52 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function renderChild($depth = null)
   {
-    if ($this->checkUserAccess())
+    if (!$this->checkUserAccess())
     {
-      // explode the class string into an array of classes
-      $class = ($this->getAttribute('class')) ? explode(' ', $this->getAttribute('class')) : array();
-
-      if ($this->isCurrent())
-      {
-        $class[] = 'current';
-      }
-      elseif ($this->isCurrentAncestor($depth))
-      {
-        $class[] = 'current_ancestor';
-      }
-
-      if ($this->actsLikeFirst())
-      {
-        $class[] = 'first';
-      }
-      if ($this->actsLikeLast())
-      {
-        $class[] = 'last';
-      }
-
-      // retrieve the attributes and put the final class string back on it
-      $attributes = $this->getAttributes();
-      if (count($class) > 0)
-      {
-        $attributes['class'] = implode(' ', $class);
-      }
-
-      // opening li tag
-      $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
-
-      // render the text/link inside the li tag
-      $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
-
-      // renders the embedded ul if there are visible children
-      $html .= $this->render($depth, true);
-
-      // closing li tag
-      $html .= $this->_format('</li>', 'li');
-
-      return $html;
+      return; 
     }
+
+    // explode the class string into an array of classes
+    $class = ($this->getAttribute('class')) ? explode(' ', $this->getAttribute('class')) : array();
+
+    if ($this->isCurrent())
+    {
+      $class[] = 'current';
+    }
+    elseif ($this->isCurrentAncestor($depth))
+    {
+      $class[] = 'current_ancestor';
+    }
+
+    if ($this->actsLikeFirst())
+    {
+      $class[] = 'first';
+    }
+    if ($this->actsLikeLast())
+    {
+      $class[] = 'last';
+    }
+
+    // retrieve the attributes and put the final class string back on it
+    $attributes = $this->getAttributes();
+    if (count($class) > 0)
+    {
+      $attributes['class'] = implode(' ', $class);
+    }
+
+    // opening li tag
+    $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
+
+    // render the text/link inside the li tag
+    $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
+
+    // renders the embedded ul if there are visible children
+    $html .= $this->render($depth, true);
+
+    // closing li tag
+    $html .= $this->_format('</li>', 'li');
+
+    return $html;
   }
 
   /**
