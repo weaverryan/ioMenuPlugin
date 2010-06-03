@@ -106,5 +106,3 @@ A bug tracker is available at
 
 This plugin was taken from [sympal CMF](http://www.sympalphp.org) and was
 developed by both Ryan Weaver and Jon Wage.
-
-If you have questions, comments or anything else, email me at
