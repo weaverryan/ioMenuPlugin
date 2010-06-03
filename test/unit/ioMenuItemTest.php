@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(182);
+$t = new lime_test(183);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -553,10 +553,10 @@ $t->info('8 - Test the render() method.');
   $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children. pt1 is also no longer a current ancestor.');
   $menu['Parent 1']->showChildren(true); // replace the setting
 
-//  $menu['Parent 1']->show(false);
-//  $rendered = '<ul class="root"><li class="current_ancestor first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
-//  $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children.');
-//  $menu['Parent 1']->showChildren(true); // replace the setting
+  $menu['Parent 1']->show(false);
+  $rendered = '<ul class="root"><li class="parent2_class first last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
+  $t->is($menu->render(), $rendered, 'The pt1 menu is hidden entirely, parent2 now gets the "first" class.');
+  $menu['Parent 1']->show(true); // replace the setting
 
   $t->info('  8.7 - Test the depth argument on ->render()');
   $t->is($menu->render(0), '', '->render(0) returns an empty string.');
