@@ -1,45 +1,52 @@
-#menuName:
-#  menu_attributes: []
-#  item_attributes: []
-#  items:           []
-
-#the main menu
-mainMenu:
-  menu_attributes:
-    class: 'menuCls'
-    id:    'nav'
-  item_attributes:
-    class: 'itemCls'
-
-  items:
+singleLevel:
+  name: singleLevel
+  #class: overrideclass
+  attributes:
+    class: foo
+  children:
     -
-      _attributes:
-        class: 'foo'
-      name: Homepage
+      attributes:
+        class: bar
+      label: secure
       route: homepage
-      children:
-        -
-          _attributes:
-            id:  'user'
-          name:  Default
-          route: default
-
-adminMenu:
-  menu_attributes:
-    class: 'menuCls'
-    id:    'nav'
-  item_attributes:
-    class: 'itemCls'
-
-  items:
     -
-      _attributes:
-        class: 'foo'
-      name: Homepage
-      route: homepage
+      attributes:
+      label: foo
+      route: default/module
+
+multiLevel:
+  name: singleLevel
+  #class: overrideclass
+  attributes:
+    class: foo
+  children:
+    level_1_1:
+      attributes:
+        class: nested
+      name: foobar
+      route: default/module
       children:
-        -
-          _attributes:
-            id:  'user'
-          name:  Default
-          route: default
+        level_2_1:
+          attributes:
+            class: bar nested2
+          name: foobarbaz
+          route: default/index
+          children:
+            level_3_1:
+              attributes:
+                class: bar
+              name: foobaz
+              route: default/index
+            level_3_2:
+              attributes:
+              name: baz
+              route: default/module
+            level_3_3:
+              attributes:
+              name: baz
+              route: default/module
+        level_2_2:
+          attributes:
+          label: barbaz
+          route: default/module
+

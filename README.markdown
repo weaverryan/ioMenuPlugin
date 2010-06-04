@@ -140,6 +140,6 @@ in your template you can use the helper as follows:
 TODO
 -----
 
-  - test the config handler and the generated menu cache
+  - add more tests to the config cache
   - correct fetching of cascading credentials
   - cascading of attributes

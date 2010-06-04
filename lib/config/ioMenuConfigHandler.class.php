@@ -47,7 +47,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
 
     if (!$config)
     {
-      return;
+      return false;
     }
 
     $this->iterateMenus($config);
