@@ -66,46 +66,52 @@ Assuming you're in the /my-comments page, the output would be:
 If you are willing to define your menus in a yaml file, you can do so by create a navigation.yml in your app config folder:
 
     #the main menu
-    mainMenu:
-      menu_attributes:
-        class: 'menuCls'
-        id:    'nav'
-      item_attributes:
-        class: 'itemCls'
-
-      items:
+    adminMenu:
+      name: adminMenu
+      attributes:
+        id: main-nav
+      children:
         -
-          _attributes:
-            class: 'foo'
           name: Homepage
           route: homepage
-          children:
-            -
-              _attributes:
-                id:  'user'
-              name:  Default
-              route: default
+        -
+          name: foo
+          route: default/foo
+        -
+          name: bar
+          route: http://foo.com
+        -
+          name: baz
+          route: @default
 
     #the admin menu
     adminMenu:
-      menu_attributes:
-        class: 'menuCls'
-        id:    'nav'
-      item_attributes:
-        class: 'itemCls'
-
-      items:
+      name: adminMenu
+      attributes:
+        id: main-nav
+      children:
         -
-          _attributes:
-            class: 'foo'
-          name: Admin Homepage
+          name: Dashboard
           route: homepage
+        -
+          name: User-Managment
+          route:
           children:
             -
-              _attributes:
-                id:  'user'
-              name:  Admin Default
-              route: default
+              attributes:
+                id: foo
+                onclick: 'alert("bar");'
+              name: User
+              route: sfGuardUser/index
+            -
+              name: Groups
+              route: sfGuardGroup/index
+            -
+              name: Permission
+              route: sfGuardPermission/index
+        -
+          name: Signout
+          route: sfGuardAuth/signout
 
 The default symfony security settings will be merged into this structure (currently it only respects credentials) from the corresponding security.yml file for each route.
 

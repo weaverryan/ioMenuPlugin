@@ -24,7 +24,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
    *
    * @var array
    */
-  private $menus = array();
+  public $menus = array();
 
   /**
    * the sfContext
@@ -41,6 +41,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   public function execute($configFiles)
   {
     $config = $this->parseYamls($configFiles);
+    //$config = sfYaml::load($configFiles);
     
     $this->setContext();
 
@@ -59,20 +60,16 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
    *
    * @param array $config
    */
-  protected function iterateMenus($config)
+  protected function iterateMenus(&$config)
   {
-    array_walk($config, array($this, 'parseMenu'));
-  }
-
-  /**
-   * iterate over items within a menu
-   *
-   * @param array $menu
-   * @param string $name
-   */
-  protected function iterateItems($menu, $name)
-  {
-    array_walk($menu, array($this, 'parseItem'), $name);
+    if(is_array($config))
+    {
+      array_walk($config, array($this, 'parseMenu'));
+    }
+    else
+    {
+      $this->parseMenu($config, 'menu');
+    }
   }
 
   /**
@@ -81,13 +78,13 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
    * @param array $menu
    * @param string $name
    */
-  protected function parseMenu($menu, $name)
+  protected function parseMenu(&$menu, $name)
   {
     $this->menus[$name] = $menu;
 
-    $this->buffer .= sprintf("\n$%s = new ioMenu(%s);\n", $name, $this->parseAttributes($menu));
+    array_walk($menu['children'], array($this,'parseItem'));
 
-    $this->iterateItems($menu['items'], $name);
+    $this->buffer .= '$'.$name.' = \''.serialize($menu).'\';';
   }
 
   /**
@@ -100,55 +97,17 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
    * 
    * @todo too many parameters
    */
-  protected function parseItem($item, $name, $menu, $anchor=null)
+  protected function parseItem(&$data)
   {
-    $this->createItem($item, $menu);
-    $this->addItem($item, $menu, $anchor);
-
-    //recursivly scan and add child items
-    if (array_key_exists('children', $item))
+    if(isset($data['route']))
     {
-      foreach ($item['children'] as $childName => $child)
-      {
-        $this->parseItem($child, $childName, $menu, $item);
-      }
+      //inject credentials for route here
+      $data['credentials'] = $this->getCredentials($data);
     }
-  }
 
-  /**
-   * creates a menu item
-   *
-   * @param array $item
-   * @param string $menu
-   */
-  protected function createItem($item, $menu)
-  {
-    $attrs = $this->parseAttributes($item, $menu);
-
-    $this->buffer .= sprintf("\$item_%s = new ioMenuItem('%s','@%s',%s);\n", $item['route'], $item['name'], $item['route'], $attrs);
-
-    if ($credentials = $this->getCredentials($item))
+    if(isset($data['children']) && is_array($data['children']) && !empty($data['children']))
     {
-      $this->buffer .= sprintf("\$item_%s->setCredentials(%s);\n", $item['route'], $this->var_export_nokeys($credentials));
-    }
-  }
-
-  /**
-   * adds a menu item to another item or to a menu
-   *
-   * @param array $item
-   * @param string $menu
-   * @param array $anchor
-   */
-  protected function addItem($item, $menu, $anchor=false)
-  {
-    if ($anchor)
-    {
-      $this->buffer .= sprintf("\$item_%s->addChild(\$item_%s);\n", $anchor['route'], $item['route']);
-    }
-    else
-    {
-      $this->buffer .= sprintf("\$%s->addChild(\$item_%s);\n", $menu, $item['route']);
+      array_walk($data['children'], array($this,'parseItem'));
     }
   }
 
@@ -207,7 +166,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
 
     if(strpos($routeName, '?'))
     {
-      $routeName = substr($routeName, 0, strpos($$routeName, '?'));
+      $routeName = substr($routeName, 0, strpos($routeName, '?'));
     }
 
     if (!array_key_exists($routeName, $routes))
@@ -230,7 +189,7 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
 
     if(!$route)
     {
-      return false;
+      return array();
     }
 
     $security = $this->getSecurityConfigForRoute($route);
@@ -242,79 +201,11 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     {
       if(isset($security[$dataset]) && $security[$dataset]['is_secure'] == 'on')
       {
-        $set = isset($security[$dataset]['credentials']) ? $security[$dataset]['credentials'] : false;
+        $set = isset($security[$dataset]['credentials']) ? $security[$dataset]['credentials'] : array();
       }
     }
 
-    return isset($set) ? $set : false;
-  }
-
-  /**
-   * parses the attributes to a string for menus and items
-   *
-   * @param array $item
-   * @param string $menu
-   * @param boolean $keys
-   * @return string
-   */
-  protected function parseAttributes($item, $menu=false, $keys=true)
-  {
-    $attrs = $this->getAttributesFromItem($item, $menu);
-
-    return $this->exportAttributes($attrs, $keys);
-  }
-
-  /**
-   * parses an array to a string representation, with or without keys
-   *
-   * @param array $attrs
-   * @param string $keys
-   * @return string
-   */
-  protected function exportAttributes($attrs, $keys)
-  {
-    if ($keys)
-    {
-      return str_replace('"', "'", var_export($attrs, true));
-    }
-    else
-    {
-      return str_replace('"', "'", $this->var_export_nokeys($attrs));
-    }
-  }
-
-  /**
-   * read the attributes from an item (works for items and menus) and respects the configuration cascade
-   *
-   * @param array $item
-   * @param string $menu
-   * @return array
-   */
-  protected function getAttributesFromItem($item, $menu=false)
-  {
-    $attrs = array();
-
-    if ($menu)
-    {
-      $attrs = isset($item['_attributes']) ? $item['_attributes'] : $this->menus[$menu]['item_attributes'];
-    }
-    else
-    {
-      $attrs = isset($item['menu_attributes']) ? $item['menu_attributes'] : array();
-    }
-
-    return $attrs;
-  }
-
-  /**
-   * exports an object as array without keys
-   *
-   * @param mixed $obj
-   * @return string
-   */
-  protected function var_export_nokeys($obj)
-  {
-    return preg_replace("/'?\w+'?\s+=>\s+/", '', var_export($obj, true));
+    return isset($set) ? $set : array();
   }
 
 }
