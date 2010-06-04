@@ -1,7 +1,9 @@
 <?php
 
-function get_menu($name = null){
+function render_ioMenu($name = null){
   include(sfContext::getInstance()->getConfigCache()->checkConfig('config/navigation.yml'));
   
-  return ioMenu::createFromArray($$name);
+  $menu = ioMenu::createFromArray($$name);
+
+  return $menu->render();
 }

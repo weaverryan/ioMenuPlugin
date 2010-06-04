@@ -8,6 +8,8 @@ A plugin to make menus easier to write in symfony.
  * Show/hide menus based on authentication, credentials
  * Hide portions of the tree, or render down to a certain depth
  * Menu rendered with "pretty" spacing for easier debugging & styling
+ * fluent YAML configuration with merged default security.yml files
+ * helper for easy to use rendering
 
 Inspired by [sympal](http://www.sympalphp.org) and the
 [SemanticMenu](http://github.com/danielharan/semantic-menu) from Ruby on Rails.
@@ -118,15 +120,20 @@ It has a fluent interface!
 
 The default symfony security settings will be merged into this structure (currently it only respects credentials) from the corresponding security.yml file for each route.
 
-To retrieve those cached menu easily, use the *ioMenu* helper, activate it in your settings.yml
+To retrieve those cached menu easily, use the *ioMenu* helper.
 
-To finally fetch a menu, use:
+activate the helper in your settings.yml
 
-    $menu = get_menu('mainMenu');
-    echo $menu->render();
+    all:
+      .settings:
+        standard_helpers:       [Partial, Cache, Form, ioMenu ]
 
-    $menu = get_menu('adminMenu');
-    echo $menu->render();
+
+in your template you can use the helper as follows:
+
+    echo render_ioMenu('mainMenu');
+
+    echo render_ioMenu('adminMenu');
 
 TODO
 -----
