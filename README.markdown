@@ -71,12 +71,14 @@ Simply create a navigation.yml in your app config folder.
 It has a fluent interface!
 
     #the main menu
-    adminMenu:
-      name: adminMenu
+    mainMenu:
+      name: mainMenu
       attributes:
         id: main-nav
       children:
         -
+          attributes:
+            class: fooItem
           name: Homepage
           route: homepage
         -
