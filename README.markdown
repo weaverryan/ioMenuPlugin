@@ -8,7 +8,7 @@ A plugin to make menus easier to write in symfony.
  * Show/hide menus based on authentication, credentials
  * Hide portions of the tree, or render down to a certain depth
  * Menu rendered with "pretty" spacing for easier debugging & styling
- * fluent YAML configuration with merged default security.yml files
+ * fluent YAML configuration with merged default security.yml settings
  * helper for easy to use rendering
 
 Inspired by [sympal](http://www.sympalphp.org) and the
@@ -142,3 +142,4 @@ TODO
 
   - test the config handler and the generated menu cache
   - correct fetching of cascading credentials
+  - cascading of attributes
