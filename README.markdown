@@ -63,7 +63,10 @@ Assuming you're in the /my-comments page, the output would be:
       </li>
     </ul>
 
-If you are willing to define your menus in a yaml file, you can do so by create a navigation.yml in your app config folder:
+If you will, you can define your menus in a yaml file!
+
+Simply create a navigation.yml in your app config folder.
+It has a fluent interface!
 
     #the main menu
     adminMenu:
@@ -129,3 +132,4 @@ TODO
 -----
 
   - test the config handler and the generated menu cache
+  - correct fetching of cascading credentials
