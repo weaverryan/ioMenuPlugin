@@ -21,13 +21,13 @@ $pretty = '<ul class="root">
     </ul>
   </li>
   <li class="current_ancestor last">
-    Parent 2
+    <span>Parent 2</span>
     <ul class="menu_level_1">
       <li class="current first last">
         <a href="'.url_for('@test_menu').'">Child 4</a>
         <ul class="menu_level_2">
           <li class="first last">
-            Grandchild 1
+            <span>Grandchild 1</span>
           </li>
         </ul>
       </li>
