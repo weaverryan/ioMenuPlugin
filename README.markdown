@@ -134,8 +134,8 @@ activate the helper in your settings.yml
 in your template you can use the helper as follows:
 
     echo render_ioMenu('mainMenu');
-
-    echo render_ioMenu('adminMenu');
+    //or
+    echo get_ioMenu('adminMenu')->render();
 
 TODO
 -----
