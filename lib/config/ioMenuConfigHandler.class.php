@@ -102,8 +102,8 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   {
     if(isset($data['route']))
     {
-      //inject credentials for route here
-      $data['credentials'] = $this->getCredentials($data);
+      //inject security.yml here
+      $this->setSecuritySettingsForItem($data);
     }
 
     if(isset($data['children']) && is_array($data['children']) && !empty($data['children']))
@@ -136,9 +136,8 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
     $finder = new sfFinder();
 
     $files = array(
-      $config->getRootDir().'/apps/'.$config->getApplication().'/modules/'.$route_defaults['module'].'/config/security.yml',
       $config->getRootDir().'/apps/'.$config->getApplication().'/config/security.yml',
-      //$finder->ignore_version_control()->type('file')->name($route_defaults['module'].'/config/security.yml')->in($config->getRootDir().'/plugins')
+      $config->getRootDir().'/apps/'.$config->getApplication().'/modules/'.$route_defaults['module'].'/config/security.yml'
     );
 
     foreach($files as $k => $file)
@@ -149,7 +148,9 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
       }
     }
 
-    return sfSecurityConfigHandler::getConfiguration($files);
+    $config = sfSecurityConfigHandler::flattenConfigurationWithEnvironment(sfSecurityConfigHandler::getConfiguration($files));
+
+    return $config;
   }
 
   /**
@@ -161,30 +162,37 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   protected function getRouteFromItem($item)
   {
     $config = $this->context->getConfiguration();
-    $routes = $this->context->getRouting()->getRoutes();
+    $routing = $this->context->getRouting();
+
+    if(strpos($item['route'],'://') || strpos($item['route'],'ww.') || strpos($item['route'],'#') !== false){
+      return false;
+    }
+    elseif(strpos($item['route'],'/'))
+    {
+      $config = $routing->parse($item['route']);
+      return $config['_sf_route'];
+    }   
 
     $routeName = $item['route'];
 
     if(strpos($routeName, '?'))
     {
-      $routeName = substr($routeName, 0, strpos($routeName, '?'));
+      $routeParams = substr($routeName, strpos($routeName, '?')+1);
+      $routeName = str_replace('@', '', substr($routeName, 0, strpos($routeName, '?')));
     }
 
-    if (!array_key_exists($routeName, $routes))
-    {
-      return false;
-    }
+    $routes = $routing->getRoutes();
 
-    return $routes[$routeName];
+    return isset($routes[$routeName]) ? $routes[$routeName] : false;
   }
 
   /**
-   * get the credentials for an item
+   * set the security settings for an item
    *
    * @param array $item
    * @return mixed
    */
-  protected function getCredentials($item)
+  protected function setSecuritySettingsForItem(&$item)
   {
     $route = $this->getRouteFromItem($item);
 
@@ -195,18 +203,15 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
 
     $security = $this->getSecurityConfigForRoute($route);
 
-    $route_defaults = $route->getDefaultParameters();
-    $action = $route_defaults['action'];
-
-    foreach(array($action,'all','default') as $dataset)
+    if(isset($security['credentials']))
     {
-      if(isset($security[$dataset]) && $security[$dataset]['is_secure'] == 'on')
-      {
-        $set = isset($security[$dataset]['credentials']) ? $security[$dataset]['credentials'] : array();
-      }
+      $item['credentials'] = $security['credentials'];
     }
 
-    return isset($set) ? $set : array();
+    if($security['is_secure'])
+    {
+      $item['requires_auth'] = true;
+    }
   }
 
 }

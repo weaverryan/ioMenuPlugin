@@ -761,7 +761,15 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
 
       // render the text/link inside the li tag
-      $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
+      if(!$this->_route)
+      {
+        $html .= $this->_format('<span>'.$this->renderLabel().'</span>', 'link');
+      }
+      else
+      {
+        $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
+      }
+      
 
       // renders the embedded ul if there are visible children
       $html .= $this->render($depth, true);
