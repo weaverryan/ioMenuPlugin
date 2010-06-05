@@ -1,17 +1,17 @@
 <?php
 
-require dirname(__FILE__).'/../bootstrap/functional.php';
-require $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
-require sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
+require_once dirname(__FILE__).'/../bootstrap/functional.php';
+require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
+require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
 class testClass extends ioMenuConfigHandler {
 
 }
 
 // @BeforeAll
-$file = dirname(__FILE__).'/../project/apps/frontend/config/navigation.yml';
+$file = dirname(__FILE__).'/../fixtures/project/apps/frontend/config/navigation.yml';
 $ch = new testClass();
-$testCount = 13;
+$testCount = 12;
 
 $t = new lime_test($testCount, new lime_output_color());
 
