@@ -3,6 +3,7 @@
 /**
  * caches the ioMenus defined in the navigation.yml
  *   - you can infinite nest the menus
+ *   - it has a fluent interface to ioMenu::createFromArray
  *   - seamless fetching of security settings from security.yml
  *
  * @package     ioMenuPlugin
