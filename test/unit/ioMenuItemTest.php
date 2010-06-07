@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(182);
+$t = new lime_test(183);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -549,14 +549,19 @@ $t->info('8 - Test the render() method.');
   $menu->showChildren(true); // replace the setting
 
   $menu['Parent 1']->showChildren(false);
-  $rendered = '<ul class="root"><li class="current_ancestor first"><span>Parent 1</span></li><li class="parent2_class last" title="parent2 title"><span>Parent 2</span><ul class="menu_level_1"><li class="first last"><span>Child 4</span><ul class="menu_level_2"><li class="first last"><span>Grandchild 1</span></li></ul></li></ul></li></ul>';
-  $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children.');
+  $rendered = '<ul class="root"><li class="first"><span>Parent 1</span></li><li class="parent2_class last" title="parent2 title"><span>Parent 2</span><ul class="menu_level_1"><li class="first last"><span>Child 4</span><ul class="menu_level_2"><li class="first last"><span>Grandchild 1</span></li></ul></li></ul></li></ul>';
+  $t->is($menu->render(), $rendered, 'The menu is rendered, but pt1 hides its children. pt1 is also no longer a current ancestor.');
   $menu['Parent 1']->showChildren(true); // replace the setting
+
+  $menu['Parent 1']->show(false);
+  $rendered = '<ul class="root"><li class="parent2_class first last" title="parent2 title"><span>Parent 2</span><ul class="menu_level_1"><li class="first last"><span>Child 4</span><ul class="menu_level_2"><li class="first last"><span>Grandchild 1</span></li></ul></li></ul></li></ul>';
+  $t->is($menu->render(), $rendered, 'The pt1 menu is hidden entirely, parent2 now gets the "first" class.');
+  $menu['Parent 1']->show(true); // replace the setting
 
   $t->info('  8.7 - Test the depth argument on ->render()');
   $t->is($menu->render(0), '', '->render(0) returns an empty string.');
 
-  $rendered = '<ul class="root"><li class="current_ancestor first"><span>Parent 1</span></li><li class="parent2_class last" title="parent2 title"><span>Parent 2</span></li></ul>';
+  $rendered = '<ul class="root"><li class="first"><span>Parent 1</span></li><li class="parent2_class last" title="parent2 title"><span>Parent 2</span></li></ul>';
   $t->is($menu->render(1), $rendered, '->render(1) returns only the pt1 and pt2 elements');
 
   $rendered = '<ul class="root"><li class="current_ancestor first"><span>Parent 1</span><ul class="menu_level_1"><li class="first"><span>Child 1</span></li><li class="current"><span>Child 2</span></li><li class="last"><span>Child 3</span></li></ul></li><li class="parent2_class last" title="parent2 title"><span>Parent 2</span><ul class="menu_level_1"><li class="first last"><span>Child 4</span></li></ul></li></ul>';
@@ -567,7 +572,7 @@ $t->info('8 - Test the render() method.');
 
   $t->info('    Use render(2) but set pt1\'s showChildren() to false.');
   $menu['Parent 1']->showChildren(false);
-  $rendered = '<ul class="root"><li class="current_ancestor first"><span>Parent 1</span></li><li class="parent2_class last" title="parent2 title"><span>Parent 2</span><ul class="menu_level_1"><li class="first last"><span>Child 4</span></li></ul></li></ul>';
+  $rendered = '<ul class="root"><li class="first"><span>Parent 1</span></li><li class="parent2_class last" title="parent2 title"><span>Parent 2</span><ul class="menu_level_1"><li class="first last"><span>Child 4</span></li></ul></li></ul>';
   $t->is($menu->render(2), $rendered, 'Displays ch4 and not gc1 because depth = 2. Hides ch1-3 because showChildren() is false on pt1.');
 
 

@@ -34,6 +34,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * Options related to rendering
    */
   protected
+    $_show             = true,    // boolean to render this menu
     $_showChildren     = true,    // boolean to render the children of this menu
     $_urlOptions       = array(), // the options array passed to url_for()
     $_linkOptions      = array(); // the options array passed to link_to()
@@ -302,6 +303,34 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     return $this->_showChildren;
   }
 
+  /**
+   * Whether or not to show this menu item. Leave parameter blank to
+   * simply return the value.
+   *
+   * @param  boolean $bool If specified, set show to this value
+   * @return bool
+   */
+  public function show($bool = null)
+  {
+    if ($bool !== null)
+    {
+      $this->_show = (bool) $bool;
+    }
+
+    return $this->_show;
+  }
+
+  /**
+   * Whether or not this menu item should be rendered or not based on
+   * all the available factors
+   *
+   * @param sfBasicSecurityUser $user The optional user to check against
+   * @return boolean
+   */
+  public function shouldBeRendered(sfBasicSecurityUser $user = null)
+  {
+    return $this->show() && $this->checkUserAccess($user);
+  }
 
   /**
    * Add a child menu item to this menu
@@ -636,7 +665,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   {
     foreach ($this->_children as $child)
     {
-      if ($child->checkUserAccess())
+      if ($child->shouldBeRendered())
       {
         return true;
       }
@@ -727,58 +756,60 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function renderChild($depth = null)
   {
-    if ($this->checkUserAccess())
+    // if we don't have access or this item is marked to not be shown
+    if (!$this->shouldBeRendered())
     {
-      // explode the class string into an array of classes
-      $class = ($this->getAttribute('class')) ? explode(' ', $this->getAttribute('class')) : array();
-
-      if ($this->isCurrent())
-      {
-        $class[] = 'current';
-      }
-      elseif ($this->isCurrentAncestor())
-      {
-        $class[] = 'current_ancestor';
-      }
-
-      if ($this->actsLikeFirst())
-      {
-        $class[] = 'first';
-      }
-      if ($this->actsLikeLast())
-      {
-        $class[] = 'last';
-      }
-
-      // retrieve the attributes and put the final class string back on it
-      $attributes = $this->getAttributes();
-      if (count($class) > 0)
-      {
-        $attributes['class'] = implode(' ', $class);
-      }
-
-      // opening li tag
-      $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
-
-      // render the text/link inside the li tag
-      if(!$this->_route)
-      {
-        $html .= $this->_format('<span>'.$this->renderLabel().'</span>', 'link');
-      }
-      else
-      {
-        $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
-      }
-      
-
-      // renders the embedded ul if there are visible children
-      $html .= $this->render($depth, true);
-
-      // closing li tag
-      $html .= $this->_format('</li>', 'li');
-
-      return $html;
+      return; 
     }
+
+    // explode the class string into an array of classes
+    $class = ($this->getAttribute('class')) ? explode(' ', $this->getAttribute('class')) : array();
+
+    if ($this->isCurrent())
+    {
+      $class[] = 'current';
+    }
+    elseif ($this->isCurrentAncestor($depth))
+    {
+      $class[] = 'current_ancestor';
+    }
+
+    if ($this->actsLikeFirst())
+    {
+      $class[] = 'first';
+    }
+    if ($this->actsLikeLast())
+    {
+      $class[] = 'last';
+    }
+
+    // retrieve the attributes and put the final class string back on it
+    $attributes = $this->getAttributes();
+    if (count($class) > 0)
+    {
+      $attributes['class'] = implode(' ', $class);
+    }
+
+    // opening li tag
+    $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
+
+    // render the text/link inside the li tag
+    if(!$this->_route)
+    {
+      $html .= $this->_format('<span>'.$this->renderLabel().'</span>', 'link');
+    }
+    else
+    {
+      $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
+    }
+
+    // renders the embedded ul if there are visible children
+    $html .= $this->render($depth, true);
+
+    // closing li tag
+    $html .= $this->_format('</li>', 'li');
+
+    return $html;
   }
 
   /**
@@ -987,11 +1018,17 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    *
    * @return boolean
    */
-  public function isCurrentAncestor()
+  public function isCurrentAncestor($depth = null)
   {
+    // if children not shown, then we're definitely not a visible ancestor
+    if (!$this->showChildren() || $depth === 0)
+    {
+      return false;
+    }
+
     foreach ($this->getChildren() as $child)
     {
-      if ($child->isCurrent() || $child->isCurrentAncestor())
+      if ($child->isCurrent() || $child->isCurrentAncestor($depth - 1))
       {
         return true;
       }
@@ -1046,7 +1083,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     }
 
     // if we're first and visible, we're first, period.
-    if ($this->checkUserAccess() && $this->isFirst())
+    if ($this->shouldBeRendered() && $this->isFirst())
     {
       return true;
     }
@@ -1055,7 +1092,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     foreach ($children as $child)
     {
       // loop until we find a visible menu. If its this menu, we're first
-      if ($child->checkUserAccess())
+      if ($child->shouldBeRendered())
       {
         return $child->getName() == $this->getName();
       }
@@ -1082,7 +1119,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     }
 
     // if we're last and visible, we're last, period.
-    if ($this->checkUserAccess() && $this->isLast())
+    if ($this->shouldBeRendered() && $this->isLast())
     {
       return true;
     }
@@ -1091,7 +1128,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     foreach ($children as $child)
     {
       // loop until we find a visible menu. If its this menu, we're first
-      if ($child->checkUserAccess())
+      if ($child->shouldBeRendered())
       {
         return $child->getName() == $this->getName();
       }
