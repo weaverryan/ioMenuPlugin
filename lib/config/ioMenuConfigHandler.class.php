@@ -163,27 +163,29 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
   {
     $config = $this->context->getConfiguration();
     $routing = $this->context->getRouting();
+    $routeName = $item['route'];
+    $routeName  = str_replace('@', '', $routeName);
 
     if(strpos($item['route'],'://') || strpos($item['route'],'ww.') || strpos($item['route'],'#') !== false){
       return false;
     }
-    elseif(strpos($item['route'],'/'))
+    elseif(strpos($routeName,'/'))
     {
-      $config = $routing->parse($item['route']);
+      $routeName = self::replaceConstants($routeName);
+      $config = $routing->parse($routeName);
       return $config['_sf_route'];
-    }   
-
-    $routeName = $item['route'];
-
-    if(strpos($routeName, '?'))
+    }
+    else
     {
-      $routeParams = substr($routeName, strpos($routeName, '?')+1);
-      $routeName = str_replace('@', '', substr($routeName, 0, strpos($routeName, '?')));
+      if(strpos($routeName, '?'))
+      {
+        $routeName = substr($routeName, 0, strpos($routeName, '?') ? strpos($routeName, '?') : strlen($routeName));
+      }
+
+      $routes = $routing->getRoutes();
+      return isset($routes[$routeName]) ? $routes[$routeName] : false;
     }
 
-    $routes = $routing->getRoutes();
-
-    return isset($routes[$routeName]) ? $routes[$routeName] : false;
   }
 
   /**
@@ -205,12 +207,12 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
 
     if(isset($security['credentials']))
     {
-      $item['credentials'] = $security['credentials'];
+      $item['credentials'] = $item['credentials'] ? $item['credentials'] : $security['credentials'];
     }
 
     if($security['is_secure'])
     {
-      $item['requires_auth'] = true;
+      $item['requires_auth'] = $item['requires_auth'] ? $item['requires_auth'] : true;
     }
   }
 
