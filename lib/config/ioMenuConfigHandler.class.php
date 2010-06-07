@@ -159,19 +159,20 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
    * @param array $item
    * @return mixed
    */
-  protected function getRouteFromItem($item)
+  protected function getRouteFromItem(&$item)
   {
     $config = $this->context->getConfiguration();
     $routing = $this->context->getRouting();
     $routeName = $item['route'];
     $routeName  = str_replace('@', '', $routeName);
+    $routeName = self::replaceConstants($routeName);
+    $item['route'] = $routeName;
 
     if(strpos($item['route'],'://') || strpos($item['route'],'ww.') || strpos($item['route'],'#') !== false){
       return false;
     }
     elseif(strpos($routeName,'/'))
     {
-      $routeName = self::replaceConstants($routeName);
       $config = $routing->parse($routeName);
       return $config['_sf_route'];
     }
