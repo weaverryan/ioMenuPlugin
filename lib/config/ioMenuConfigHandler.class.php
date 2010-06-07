@@ -207,12 +207,12 @@ class ioMenuConfigHandler extends sfYamlConfigHandler
 
     if(isset($security['credentials']))
     {
-      $item['credentials'] = $item['credentials'] ? $item['credentials'] : $security['credentials'];
+      $item['credentials'] = isset($item['credentials']) ? $item['credentials'] : $security['credentials'];
     }
 
     if($security['is_secure'])
     {
-      $item['requires_auth'] = $item['requires_auth'] ? $item['requires_auth'] : true;
+      $item['requires_auth'] = isset($item['requires_auth']) ? $item['requires_auth'] : true;
     }
   }
 
