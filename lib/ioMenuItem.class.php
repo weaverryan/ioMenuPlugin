@@ -1272,6 +1272,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function fromArray($array)
   {
+    if (!isset($array['name']))
+    {
+      throw new sfException('Menu item cannot be created via fromArray() without a "name" key.');
+    }
     $this->setName($array['name']);
 
     if (isset($array['label']))
