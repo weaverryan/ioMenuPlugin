@@ -4,23 +4,22 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-class testClass extends ioMenuConfigHandler {
-
-}
-
 // @BeforeAll
 $file = dirname(__FILE__).'/../fixtures/project/apps/frontend/config/navigation.yml';
-$ch = new testClass();
-$testCount = 12;
+$ch = new ioMenuConfigHandler();
+$testCount = 13;
 
-$t = new lime_test($testCount, new lime_output_color());
+$t = new lime_test($testCount);
 
 // @Test general validation
 $t->diag('testing cache file');
-  $t->is($ch->execute(array()),false, 'fast quit for no config files found');
-  $t->is($buffer = $ch->execute(array($file)),true, 'buffer written');
-  $t->is(eval(substr($buffer,6)),null,'buffer is valid php code');
-  $t->isnt($buffer,'','output generated');
+  $t->is($ch->execute(array()), false, 'fast quit for no config files found');
+  $t->is($buffer = $ch->execute(array($file)), true, 'buffer written');
+  $t->is(substr($buffer, 0, 5), '<?php', 'The cache config value begins with <?php');
+
+  $buffer = substr($buffer, 5); // remove the open <?php from the cache config
+  $t->is_deeply(eval($buffer), null, 'buffer is valid php code');
+  $t->isnt($buffer, '', 'output generated');
 
 // @Test single level menus
 $t->diag('testing single level menu');
