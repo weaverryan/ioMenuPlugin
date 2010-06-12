@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(183);
+$t = new lime_test(198);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -574,6 +574,52 @@ $t->info('8 - Test the render() method.');
   $menu['Parent 1']->showChildren(false);
   $rendered = '<ul class="root"><li class="first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4</li></ul></li></ul>';
   $t->is($menu->render(2), $rendered, 'Displays ch4 and not gc1 because depth = 2. Hides ch1-3 because showChildren() is false on pt1.');
+
+$t->info('9 - Test i18n functionaliy.');
+  $menu = new ioMenuItem('i18n');
+  $menu->addChild('admin');
+
+  $t->info('  9.1 - Test the setCulture() and getCulture() methods');
+    $context->getUser()->setCulture('es');
+    $t->is($menu->getCulture(), 'es', '->getCulture() returns the user default culture if none is set.');
+    $menu->setCulture('klingon');
+    $t->is($menu->getCulture(), 'klingon', '->getCulture() returns the culture that was explicitly set.');
+    $t->is($menu['admin']->getCulture(), 'klingon', '->getCulture() returns the parent menu items culture if not set.');
+    $menu['admin']->setCulture('mars');
+    $t->is($menu['admin']->getCulture(), 'mars', '->getCulture() returns the set culture, not the parent\'s culture.');
+
+  $t->info('  9.2 - Test the useI18n() and get/setLabel() methods');
+    $menu = new ioMenuItem('admin');
+    $context->getUser()->setCulture('en');
+    $t->is($menu->useI18n(), false, '->useI18n() returns false, there are no i18n labels set.');
+    $menu->setLabel('administración', 'es');
+    $t->is($menu->useI18n(), true, '->useI18n() returns true after an i18n label is set.');
+
+    $t->is($menu->getLabel('es'), 'administración', '->getLabel(es) correctly returns the spanish label I just set.');
+    $t->is($menu->getLabel(), 'admin', '->getLabel() still returns "admin", which is the name since no en label is set.');
+    $menu->setLabel('admin default');
+    $t->is($menu->getLabel(), 'admin default', '->getLabel() returns "admin default", the default label');
+    $menu->setLabel('administration', 'en');
+    $t->is($menu->getLabel(), 'administration', '->getLabel() returns "administration", the "en" culture label');
+
+    sfConfig::set('sf_default_culture', 'es');
+    $t->is($menu->getLabel('fake'), 'administración', '->getLabel() retrieves the sf_default_culture label if the given culture does not have a label.');
+
+    $menu->setCulture('es');
+    $t->is($menu->getLabel(), 'administración', '->getLabel() returns the label of the culture on the label');
+
+  $t->info('  9.3 - Test toArray() and fromArray()');
+    $arr = $menu->toArray();
+    $t->is($arr['i18n_labels'], array('es' => 'administración', 'en' => 'administration'), '->toArray() exports an i18n_labels array');
+
+    $newMenu = ioMenuItem::createFromArray($arr);
+    $arr = $newMenu->toArray();
+    $t->is($arr['i18n_labels'], array('es' => 'administración', 'en' => 'administration'), '->fromArray() correctly imports the i18n_labels');
+
+    $menu = new ioMenuItem('root');
+    $arr = $menu->toArray();
+    $t->is(isset($arr['i18n_labels']), false, 'If no i18n labels are set, the key is hidden entirely from ->toarray().');
+    
 
 
 // used for benchmarking

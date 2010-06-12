@@ -23,24 +23,24 @@ in `app.yml`:
           name:     Admin menu
           children:
             signin:
-              name:    Sign in
+              label:   Sign in
               route:   @sf_guard_signin
               requires_no_auth: true
               attributes: {class: signin }
             signout:
-              name:    Sign out
+              label:   Sign out
               route:   @sf_guard_signout
               requires_auth: true
             user_admin:
-              name:          User Admin
+              label:          User Admin
               requires_auth: true
               children:
                 manage_users:
-                  name:    Manage Users
+                  label:   Manage Users
                   route:   @sf_guard_user
                   credentials: [ManageUsers]
-                manage_permissoins:
-                  name:    Manage Permissions
+                manage_permissions:
+                  label:   Manage Permissions
                   route:   @sf_guard_permission
                   credentials: [ManagePermissions]
 
@@ -50,13 +50,34 @@ Creating and rendering a menu item from this object is easy:
     $menu = ioMenuItem::createFromArray($arr);
     echo $menu->render();
 
+Importing menus from the database
+----------------------------------
+
+The `ioDoctrineMenuItem` plugin creates an `ioDoctrineMenuItem` Doctrine
+model where multiple menu trees can be saved. This acts as a "data source",
+which, like the yaml syntax above, is used to create `ioMenuItem` trees.
+
+Fetching menus from the database is easy. The `ioDoctrineMenuItem` has
+multiple roots, each representing an independent menu tree. To create an
+`ioMenuItem` tree from the database, simply ask for it via the root menu
+items `name` field in the database. For example, suppose we have a root
+menu item whose name is `primary`:
+
+    // from an actions file
+    $menu = $this->getDoctrineMenu('primary');
+
+    // from the view
+    <?php echo get_doctrine_menu('primary')->render() ?>
+
+With one simple line of code, the menu tree with root node named "primary"
+is retrieved from the database and transformed into an `ioMenuItem` tree.
+
 Saving menus to the database
 ----------------------------
 
-Up to this point, we haven't talked about one of the most powerful features
-of the menu framework. Specifically, by using the `ioDoctrineMenuPlugin`,
-menu trees can be easily persisted to and retrieved from the database.
-Let's start with an example:
+Perhaps even more interesting is that any `ioMenuItem` can be persisted
+to the database. Each `ioMenuItem` you persist or save will create a new
+root node in the `ioDoctrineMenuItem` model.
 
     $menu = new ioMenuItem('primary');
     $menu->addChild('overview', '@homepage')
@@ -67,19 +88,8 @@ Let's start with an example:
     Doctrine_Core::getTable('ioDoctrineMenuItem')->persist($menu);
 
 That's it! You're entire menu tree was stored as a Nested Set in the
-ioDoctrineMenuItem model. The root of the nested set will be the entry
+`ioDoctrineMenuItem` model. The root of the nested set will be the entry
 named 'primary'.
-
-Retrieving menus from the database
-----------------------------------
-
-Fetching menus from the database is just as easy:
-
-    $menu = Doctrine_Core::getTable('ioDoctrineMenuItem')
-      ->fetchMenu('primary');
-
-With one simple line of code, the menu tree with root node named "primary"
-is retrieved from the database and transformed into an ioMenuItem tree.
 
 Caching Doctrine menu trees
 ---------------------------

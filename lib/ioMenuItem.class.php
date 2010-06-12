@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Base menu item
+ * This is your base menu item. It roughly represents a single <li> tag
+ * and is what you should interact with most of the time by default.
  * 
  * Originally taken from sympal (http://www.sympalphp.org)
  * 
@@ -29,6 +30,13 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $_requiresAuth     = null,    // boolean to require auth to show this menu
     $_requiresNoAuth   = null,    // boolean to require NO auth to show this menu
     $_credentials      = array(); // array of credentials needed to display this menu
+
+  /**
+   * Special i18n properties
+   */
+  protected
+    $_i18nLabels       = array(), // an array of labels for different cultures
+    $_culture          = null;    // the culture to use when rendering this menu
 
   /**
    * Options related to rendering
@@ -166,20 +174,107 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    *
    * @return string
    */
-  public function getLabel()
+  public function getLabel($culture = null)
   {
+    /*
+     * only try to retrieve via i18n if both:
+     *  a) we're using i18n on this menu and
+     *  b) we're either passed a culture or can retrieve it from the context
+     */
+    if ($this->useI18n() && ($culture !== null || $this->getCulture()))
+    {
+      $culture = ($culture === null) ? $this->getCulture() : $culture;
+
+      // try to return that exact culture
+      if (isset($this->_i18nLabels[$culture]))
+      {
+        return $this->_i18nLabels[$culture];
+      }
+
+      // try to return the default culture
+      $defaultCulture = sfConfig::get('sf_default_culture');
+      if (isset($this->_i18nLabels[$defaultCulture]))
+      {
+        return $this->_i18nLabels[$defaultCulture];
+      }
+    }
+
+    // if i18n isn't used or if no i18n label was found, use the default method
     return ($this->_label !== null) ? $this->_label : $this->_name;
   }
 
   /**
-   * @param  string $label The text to use when rendering this menu item
+   * @param  string $label    The text to use when rendering this menu item
+   * @param  string $culture  The i18n culture to set this label for 
    * @return ioMenuItem
    */
-  public function setLabel($label)
+  public function setLabel($label, $culture = null)
   {
-    $this->_label = $label;
+    if ($culture === null)
+    {
+      $this->_label = $label;
+    }
+    else
+    {
+      $this->_i18nLabels[$culture] = $label;
+    }
 
     return $this;
+  }
+
+  /**
+   * Whether or not this menu item is using i18n
+   *
+   * @return bool
+   */
+  public function useI18n()
+  {
+    return (count($this->_i18nLabels) > 0);
+  }
+
+  /**
+   * Returns the culture with which this menu item should render.
+   *
+   * If the culture has not been set, it asks its parent menu item for
+   * a culture. If this is the root, it will attempt to ask sfContext
+   * for a culture. If all else fails, the default culture is returned.
+   *
+   * @return string
+   */
+  public function getCulture()
+  {
+    // if the culture is set, simply return it
+    if ($this->_culture !== null)
+    {
+      return $this->_culture;
+    }
+
+    // if we have a parent, just as the parent
+    if ($this->getParent())
+    {
+      return $this->getParent()->getCulture();
+    }
+    
+    // if we're the root, get from the context or return the default
+    if (sfContext::hasInstance())
+    {
+      return sfContext::getInstance()->getUser()->getCulture();
+    }
+    else
+    {
+      return sfConfig::get('sf_default_culture');
+    }
+  }
+
+  /**
+   * Set the culture that should be used when rendering the menu
+   *
+   * @param  string $culture The culture to use when rendering the menu
+   * @return void
+   */
+  public function setCulture($culture)
+  {
+    $this->_culture = $culture;
   }
 
   /**
@@ -1234,6 +1329,13 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       '_requiresNoAuth' => 'requires_no_auth',
       '_credentials'    => 'credentials',
     );
+
+    // output the i18n labels if any are set
+    if ($this->useI18n())
+    {
+      $fields['_i18nLabels'] = 'i18n_labels';
+    }
+
     $array = array();
 
     foreach ($fields as $propName => $field)
@@ -1270,6 +1372,11 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     if (isset($array['label']))
     {
       $this->_label = $array['label'];
+    }
+
+    if (isset($array['i18n_labels']))
+    {
+      $this->_i18nLabels = $array['i18n_labels'];
     }
 
     if (isset($array['route']))

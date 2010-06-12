@@ -12,6 +12,10 @@ A plugin to make menus easier to write in symfony.
 Inspired by [sympal](http://www.sympalphp.org) and the
 [SemanticMenu](http://github.com/danielharan/semantic-menu) from Ruby on Rails.
 
+A small book has been written to support this plugin and
+[ioDoctrineMenuItemPlugin](http://github.com/weaverryan/ioDoctrineMenuPlugin):
+[Menu Reference Manual](http://github.com/weaverryan/ioMenuPlugin/tree/master/docs/). 
+
 Usage
 -----
 
@@ -91,6 +95,12 @@ In your `config/ProjectConfiguration.class.php` file, make sure you have
 the plugin enabled.
 
     $this->enablePlugins('ioMenuPlugin');
+
+In-depth documentation
+----------------------
+
+An in-depth reference manual is available:
+[Menu Reference Manual](http://github.com/weaverryan/ioMenuPlugin/tree/master/docs/).
 
 Care to Contribute?
 -------------------
