@@ -101,9 +101,9 @@ be correctly merged into the i18n labels of the `ioMenuItem` object.
 
 The system works in the other direction as well:
 
-   $menu = new ioMenuItem('primary');
-   $menu->addChild('admin');
-   $menu->setLabel('administración', 'es');
+    $menu = new ioMenuItem('primary');
+    $menu->addChild('admin');
+    $menu->setLabel('administración', 'es');
 
 If the above menu item were persisted to the database, a spanish translation
 would be saved on the i18n table.
