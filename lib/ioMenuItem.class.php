@@ -1375,7 +1375,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function fromArray($array)
   {
-    $this->setName($array['name']);
+    if (isset($array['name']))
+    {
+      $this->setName($array['name']);
+    }
 
     if (isset($array['label']))
     {
@@ -1437,7 +1440,8 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   {
     $class = isset($data['class']) ? $data['class'] : 'ioMenuItem';
 
-    $menu = new $class($data['name']);
+    $name = isset($data['name']) ? $data['name'] : null;
+    $menu = new $class($name);
     $menu->fromArray($data);
 
     return $menu;
