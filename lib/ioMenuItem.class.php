@@ -821,6 +821,14 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * @return string
+   */
+  public function __toString()
+  {
+    return $this->render();
+  }
+
+  /**
    * Renders all of the children of this menu.
    *
    * This calls ->renderChild() on each menu item, which instructs each
