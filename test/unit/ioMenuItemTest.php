@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(198);
+$t = new lime_test(199);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -518,6 +518,7 @@ $t->info('8 - Test the render() method.');
   $t->info('  8.1 - Render the menu in a few basic ways');
   $rendered = '<ul class="root"><li class="first">Parent 1<ul class="menu_level_1"><li class="first">Child 1</li><li>Child 2</li><li class="last">Child 3</li></ul></li><li class="last">Parent 2<ul class="menu_level_1"><li class="first last">Child 4<ul class="menu_level_2"><li class="first last">Grandchild 1</li></ul></li></ul></li></ul>';
   $t->is($menu->render(), $rendered, 'The full menu renders correctly.');
+  $t->is((string) $menu, $rendered, 'The __toString() method renders correctly.');
 
   $t->info('  8.2 - Set a title and class on pt2, and see that it renders.');
   $pt2->setAttribute('class', 'parent2_class');
