@@ -479,6 +479,83 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * Moves child to specified position. Rearange other children accordingly.
+   *
+   * @param numeric $position Position to move child to.
+   *
+   */
+  public function moveToPosition($position)
+  {
+    $this->getParent()->moveChildToPosition($this, $position);
+  }
+
+  /**
+   * Moves child to specified position. Rearange other children accordingly.
+   *
+   * @param ioMenuItem $child Child to move.
+   * @param numeric $position Position to move child to.
+   */
+  public function moveChildToPosition(ioMenuItem $child, $position)
+  {
+    $name = $child->getName();
+    $order = array_keys($this->_children);
+
+    $oldPosition = array_search($name, $order);
+    unset($order[$oldPosition]);
+
+    $order = array_values($order);
+
+    array_splice($order, $position - 1, 0, $name);
+    $this->reorderChildren($order);
+  }
+
+  /**
+   * Moves child to first position. Rearange other children accordingly.
+   */
+  public function moveToFirstPosition()
+  {
+    $this->moveToPosition(1);
+  }
+
+  /**
+   * Moves child to last position. Rearange other children accordingly.
+   */
+  public function moveToLastPosition()
+  {
+    $this->moveToPosition($this->getParent()->count());
+  }
+
+  /**
+   * Reorder children.
+   *
+   * @param array $order New order of children.
+   */
+  public function reorderChildren($order)
+  {
+    if (count($order) != $this->count())
+    {
+      throw new sfException('Cannot reorder children, order does not contain all children.');
+    }
+
+    $newChildren = array();
+
+    $num = 1;
+    foreach($order as $name)
+    {
+      if (!isset($this->_children[$name]))
+      {
+        throw new sfException('Cannot find children named '.$name);
+      }
+
+      $child = $this->_children[$name];
+      $child->setNum($num++);
+      $newChildren[$name] = $child;
+    }
+
+    $this->_children = $newChildren;
+  }
+
+  /**
    * Returns whether or not the given/current user has permission to
    * view this current menu item.
    *

@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(199);
+$t = new lime_test(204);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -621,6 +621,30 @@ $t->info('9 - Test i18n functionaliy.');
     $arr = $menu->toArray();
     $t->is(isset($arr['i18n_labels']), false, 'If no i18n labels are set, the key is hidden entirely from ->toarray().');
     
+  $t->info('10 - Test item reordering.');
+    $menu = new ioMenuItem('root');
+    $menu->addChild('c1');
+    $menu->addChild('c2');
+    $menu->addChild('c3');
+    $menu->addChild('c4');
+
+    $menu['c3']->moveToFirstPosition();
+    $arr = array_keys($menu->getChildren());
+    $t->is($arr, array('c3', 'c1', 'c2', 'c4'), 'c3 moved to first position');
+
+    $menu['c2']->moveToLastPosition();
+    $arr = array_keys($menu->getChildren());
+    $t->is($arr, array('c3', 'c1', 'c4', 'c2'), 'c2 moved to last position');
+
+    $menu['c1']->moveToPosition(3);
+    $arr = array_keys($menu->getChildren());
+    $t->is($arr, array('c3', 'c4', 'c1', 'c2'), 'c1 moved to 3rd position');
+
+    $menu->reorderChildren(array('c4', 'c3', 'c2', 'c1'));
+    $arr = array_keys($menu->getChildren());
+    $t->is($arr, array('c4', 'c3', 'c2', 'c1'), 'reorder children');
+
+    $t->is($menu->render(), '<ul class="menu"><li class="first">c4</li><li>c3</li><li>c2</li><li class="last">c1</li></ul>', 'proper rendering after reorder');
 
 
 // used for benchmarking
