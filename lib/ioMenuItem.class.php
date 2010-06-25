@@ -52,10 +52,8 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   protected
     $_children         = array(), // an array of ioMenuItem children
-    $_level            = null,    // the level (depth) of this menu item
     $_num              = null,    // the order number this menu is in its parent
     $_parent           = null,    // parent ioMenuItem
-    $_root             = null,    // root ioMenuItem
     $_isCurrent        = null,    // whether or not this menu item is current
     $_userAccess       = null,    // whether or not the current user can access this item
     $_currentUri       = null;    // the current uri to use for selecting current menu
@@ -619,19 +617,14 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function getLevel()
   {
-    if ($this->_level === null)
-    {
-      $count = -1;
-      $obj = $this;
+    $count = -1;
+    $obj = $this;
 
-      do {
-      	$count++;
-      } while ($obj = $obj->getParent());
+    do {
+      $count++;
+    } while ($obj = $obj->getParent());
 
-      $this->_level = $count;
-    }
-
-    return $this->_level;
+    return $count;
   }
 
   /**
@@ -641,17 +634,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function getRoot()
   {
-    if ($this->_root === null)
-    {
-      $obj = $this;
-      do {
+    $obj = $this;
+    do {
         $found = $obj;
-      } while ($obj = $obj->getParent());
+    } while ($obj = $obj->getParent());
 
-      $this->_root = $found;
-    }
-
-    return $this->_root;
+    return $found;
   }
 
   /**

@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(204);
+$t = new lime_test(212);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -103,6 +103,22 @@ $t->info('2 - Test the construction of trees');
   $t->is($menu->getParent(), null, '->getParent() on rt returns null - it has no parent.');
   $t->is($pt1->getParent(), $menu, '->getParent() on pt1 returns rt.');
   $t->is($gc1->getParent(), $ch4, '->getParent() on gc1 returns ch4.');
+
+  // add whole menu to new root
+  $newRoot = new ioMenuItemTest("newRoot");
+  $newRoot->addChild($menu);
+
+  $t->is($menu->getLevel(), 1, '->getLevel() on the root menu item returns 1');
+  $t->is($pt1->getLevel(), 2, '->getLevel() on pt1 is 2');
+
+  $t->is($menu->getRoot(), $newRoot, '->getRoot() on rt returns new root.');
+  $t->is($pt1->getRoot(), $newRoot, '->getRoot() on pt1 returns new root.');
+  $t->is($menu->isRoot(), false, '->isRoot() returns false for rt');
+
+  $t->is($menu->getParent(), $newRoot, '->getParent() on rt returns new root.');
+
+  // remove menu from new root
+  $newRoot->removeChild($menu);
 
   //$t->is($gc1->getPathAsString(), 'Root li > pt2 > ch4 > gc1', 'Test getPathAsString() on gc1');
 
