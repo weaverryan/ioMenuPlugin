@@ -163,6 +163,11 @@ $t->info('3 - Test child-related functionality.');
   $t->is($menu->getFirstChild(), $pt1, '->getFirstChild() on rt returns pt1.');
   $t->is($menu->getLastChild(), $pt2, '->getLastChild() on rt returns pt2.');
 
+  // test for bug in getFirstChild implementation (when internal array pointer is changed getFirstChildren returns wrong child)
+  foreach ($menu->getChildren() as $c);
+  $t->is($menu->getFirstChild(), $pt1, '->getFirstChild() on rt returns pt1.');
+  $t->is($menu->getLastChild(), $pt2, '->getLastChild() on rt returns pt2.');
+
   $t->info('  3.3 - Test ->addChild().');
   $t->info('    a) Add a child (gc2) to ch4 via ->addChild().');
     $gc2 = $ch4->addChild('gc2');

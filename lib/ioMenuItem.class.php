@@ -814,7 +814,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function getFirstChild()
   {
-    return current($this->_children);
+    return reset($this->_children);
   }
 
   /**
