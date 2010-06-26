@@ -1,5 +1,5 @@
-Creating Advanced Menus
-=======================
+Customizing Menu Items
+======================
 
 As we learned in the previous chapter, menus can be easily created, traversed,
 and configured. However, for more complex situation, we'll need even more.
@@ -164,4 +164,4 @@ both the "Manage Users" and "Manage Permissions" child menu items are
 hidden due to lack of credentials. By using the special `ioMenuAdminItem`
 class, this behavior will happen automatically.
 
---->To continue reading, see Chapter 3: Importing from YAML and the database
+--->To continue reading, see Chapter 3: Reordering and Splicing Menus

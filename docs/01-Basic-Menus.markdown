@@ -167,4 +167,4 @@ This will create the same menu as the previous option, but allows you to
 skip the specification of a name or route (the first and only argument
 is the array of attributes for the `<ul`>) for the root node.
 
---->To continue reading, see Chapter 2: Advanced Menus
+--->To continue reading, see Chapter 2: Customizing Menu Items
