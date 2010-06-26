@@ -537,7 +537,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
     $newChildren = array();
 
-    $num = 1;
     foreach($order as $name)
     {
       if (!isset($this->_children[$name]))
@@ -546,11 +545,155 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       }
 
       $child = $this->_children[$name];
-      $child->setNum($num++);
       $newChildren[$name] = $child;
     }
 
     $this->_children = $newChildren;
+    $this->_resetChildrenNum();
+  }
+
+  /**
+   * Makes a deep copy of menu tree. Every item is copied as another object.
+   *
+   * @return ioMenuItem
+   *
+   */
+  public function copy()
+  {
+    $newMenu = clone $this;
+    $newMenu->_children = array();
+    $newMenu->setParent(null);
+    foreach($this->getChildren() as $child)
+    {
+      $newMenu->addChild($child->copy());
+    }
+
+    return $newMenu;
+  }
+
+  /**
+   * Get slice of menu as another menu.
+   *
+   * If offset and/or length are numeric, it works like in array_slice function:
+   *
+   *   If offset is non-negative, slice will start at the offset.
+   *   If offset is negative, slice will start that far from the end.
+   *
+   *   If length is zero, slice will have all elements.
+   *   If length is positive, slice will have that many elements.
+   *   If length is negative, slice will stop that far from the end.
+   *
+   * It's possible to mix names/object/numeric, for example:
+   *   slice("child1", 2);
+   *   slice(3, $child5);
+   *
+   * @param mixed $offset Name of child, child object, or numeric offset.
+   * @param mixed $length Name of child, child object, or numeric length.
+   * @return ioMenuItem Slice of menu.
+   *
+   */
+  public function slice($offset, $length = 0)
+  {
+    $count = $this->count();
+    
+    $names = array_keys($this->getChildren());
+    if (is_numeric($offset))
+    {
+      $offset = ($offset >= 0) ? $offset : $count + $offset;
+      $from = (isset($names[$offset])) ? $names[$offset] : "";
+    }
+    else
+    {
+      $child = ($offset instanceof ioMenuItem) ? $offset : $this->getChild($offset, false);
+      $offset = ($child) ? $child->getNum() - 1 : 0;
+      $from = ($child) ? $child->getName() : "";
+    }
+
+    if (is_numeric($length))
+    {
+      if ($length == 0)
+      {
+        $offset2 = $count - 1;
+      }
+      else
+      {
+        $offset2 = ($length > 0) ? $offset + $length - 1 : $count - 1 + $length;
+      }
+      $to = (isset($names[$offset2])) ? $names[$offset2] : "";
+    }
+    else
+    {
+      $to = ($length instanceof ioMenuItem) ? $length->getName() : $length;
+    }
+
+    return $this->_sliceFromTo($from, $to);
+  }
+
+  /**
+   * Get slice of menu as another menu.
+   *
+   * Internal method.
+   *
+   * @param string $offset Name of child.
+   * @param string $length Name of child.
+   * @return ioMenuItem
+   *
+   */
+  private function _sliceFromTo($from, $to)
+  {
+    $newMenu = $this->copy();
+    $newChildren = array();
+
+    $copy = false;
+    foreach($newMenu->getChildren() as $child)
+    {
+      if ($child->getName() == $from)
+      {
+        $copy = true;
+      }
+
+      if ($copy == true)
+      {
+        $newChildren[$child->getName()] = $child;
+      }
+
+      if ($child->getName() == $to)
+      {
+        break;
+      }
+    }
+
+    $newMenu->setChildren($newChildren);
+    $newMenu->_resetChildrenNum();
+
+    return $newMenu;
+  }
+
+  /**
+   * Split menu into two distinct menus.
+   * 
+   * @param mixed $length Name of child, child object, or numeric length.
+   * @return array Array with two menus, with "primary" and "secondary" key
+   */
+  public function split($length)
+  {
+    $count = $this->count();
+
+    if (!is_numeric ($length))
+    {
+      if (!($length instanceof ioMenuItem))
+      {
+        $length = $this->getChild($length, false);
+      }
+
+      $length = ($length != null) ? $length->getNum() : $count;
+    }
+
+    $ret = array();
+    $ret['primary'] = $this->slice(0, $length);
+    $ret['secondary'] = $this->slice($length);
+
+    return $ret;
   }
 
   /**
@@ -754,6 +897,22 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
+   * Reset children nums.
+   *
+   * Primarily called after changes to children (removing, reordering, etc)
+   * 
+   * @return void
+   */
+  protected function _resetChildrenNum()
+  {
+    $i = 1;
+    foreach ($this->_children as $child)
+    {
+      $child->setNum($i++);
+    }
+  }
+
+  /**
    * Creates a new ioMenuItem to be the child of this menu
    * 
    * @param string  $name
@@ -788,12 +947,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $this->_children[$name]->setNum(null);
       unset($this->_children[$name]);
 
-      // reset the "num" of all children since we just shook up the child list
-      $i = 0;
-      foreach ($this->_children as $child)
-      {
-        $child->setNum(++$i);
-      }
+      $this->_resetChildrenNum();
     }
   }
 

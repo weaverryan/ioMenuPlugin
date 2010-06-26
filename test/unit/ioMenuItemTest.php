@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(212);
+$t = new lime_test(253);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -667,6 +667,121 @@ $t->info('9 - Test i18n functionaliy.');
 
     $t->is($menu->render(), '<ul class="menu"><li class="first">c4</li><li>c3</li><li>c2</li><li class="last">c1</li></ul>', 'proper rendering after reorder');
 
+// create the tree and make the variables available
+extract(create_test_tree($t, 'ioMenuItemTest'));
+
+  $t->info('10 - Test copy');
+    check_test_tree($t, $menu);
+    print_test_tree($t); // print the test tree
+    
+    $menu2 = $menu->copy();
+    $t->ok($menu2 !== $menu, 'menu2 is another instance then menu');
+    $t->ok($menu2['Parent 1'] !== $menu['Parent 1'], 'menu2->pt1 is another instance than menu->pt1');
+    $t->ok($menu2['Parent 1']['Child 2'] !== $menu['Parent 1']['Child 2'], 'menu2->pt1->ch2 is another instance than menu->pt1->ch2');
+
+    $t->ok($menu2['Parent 1']['Child 2']->getParent() === $menu2['Parent 1'], 'menu2->pt1->ch2->parent is same instance as menu2->pt1');
+    $t->ok($menu2['Parent 1']->getParent() === $menu2, 'menu2->pt1->parent is same instance as menu2');
+    //$t->ok($menu2['Parent 1']->getParent() !== $menu['Parent 1'], 'menu2->pt1->ch2->parent is same instance as menu->pt1');
+
+  $t->info('11 - Test slice');
+    $menu = new ioMenuItem('root');
+    $menu->addChild('c1');
+    $menu['c1']->addChild('gc1');
+    $menu['c1']->addChild('gc2');
+    $menu->addChild('c2');
+    $menu->addChild('c3');
+    $menu->addChild('c4');
+
+    $menu2 = $menu->slice(0, 3);
+    $t->is(array_keys($menu2->getChildren()), array('c1', 'c2', 'c3'), 'slice 0, 3');
+
+    $menu2 = $menu->slice(0, "c3");
+    $t->is(array_keys($menu2->getChildren()), array('c1', 'c2', 'c3'), 'slice 0, c3');
+
+    $menu2 = $menu->slice("c1", "c3");
+    $t->is(array_keys($menu2->getChildren()), array('c1', 'c2', 'c3'), 'slice c1, c3');
+
+    $menu2 = $menu->slice($menu['c1'], $menu['c3']);
+    $t->is(array_keys($menu2->getChildren()), array('c1', 'c2', 'c3'), 'slice c1, c3');
+
+    $menu2 = $menu->slice(1, 2);
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3'), 'slice 1, 2');
+
+    $menu2 = $menu->slice(1, "c3");
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3'), 'slice 1, c3');
+
+    $menu2 = $menu->slice("c2", "c3");
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3'), 'slice c2, c3');
+
+    $menu2 = $menu->slice($menu['c2'], $menu['c3']);
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3'), 'slice c2, c3');
+
+    $menu2 = $menu->slice(1);
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3', 'c4'), 'slice 1');
+
+    $menu2 = $menu->slice(-3);
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3', 'c4'), 'slice -3');
+
+    $menu2 = $menu->slice("c2");
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3', 'c4'), 'slice c2');
+
+    $menu2 = $menu->slice($menu['c2']);
+    $t->is(array_keys($menu2->getChildren()), array('c2', 'c3', 'c4'), 'slice c2');
+
+    $menu2 = $menu->slice($menu['c2'], 1);
+    $t->is(array_keys($menu2->getChildren()), array('c2'), 'slice c2, 1');
+
+    $menu2 = $menu->slice($menu['c2'], -2);
+    $t->is(array_keys($menu2->getChildren()), array('c2'), 'slice c2, -3');
+
+    $menu2 = $menu->slice("c2", "c2");
+    $t->is(array_keys($menu2->getChildren()), array('c2'), 'slice c2, c2');
+
+    $menu2 = $menu->slice(4);
+    $t->is(array_keys($menu2->getChildren()), array(), 'slice 4');
+
+    $menu2 = $menu->slice("c5");
+    $t->is(array_keys($menu2->getChildren()), array(), 'slice c5');
+
+    $menu2 = $menu->slice(0, 5);
+    $t->is(array_keys($menu2->getChildren()), array('c1', 'c2', 'c3', 'c4'), 'slice 0, 5');
+
+    $menu2 = $menu->slice("c1", "c5");
+    $t->is(array_keys($menu2->getChildren()), array('c1', 'c2', 'c3', 'c4'), 'slice c1, c5');
+
+    $menu2 = $menu->slice(0, 2);
+    $t->is($menu2->render(), '<ul class="menu"><li class="first">c1<ul class="menu_level_1"><li class="first">gc1</li><li class="last">gc2</li></ul></li><li class="last">c2</li></ul>', 'proper rendering after slice');
+
+  $t->info('12 - Test split');
+    extract($menu->split(1));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1'), array('c2', 'c3', 'c4')), 'split 1');
+
+    extract($menu->split("c1"));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1'), array('c2', 'c3', 'c4')), 'split c1');
+
+    extract($menu->split(2));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1', 'c2'), array('c3', 'c4')), 'split 2');
+
+    extract($menu->split("c2"));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1', 'c2'), array('c3', 'c4')), 'split c2');
+
+    extract($menu->split(4));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1', 'c2', 'c3', 'c4'), array()), 'split 4');
+
+    extract($menu->split("c4"));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1', 'c2', 'c3', 'c4'), array()), 'split c4');
+
+    extract($menu->split(5));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1', 'c2', 'c3', 'c4'), array()), 'split 5');
+
+    extract($menu->split("c5"));
+    $t->is(array(array_keys($primary->getChildren()), array_keys($secondary->getChildren())), array(array('c1', 'c2', 'c3', 'c4'), array()), 'split c5');
+
+    extract($menu->split(2));
+    $t->ok($primary['c1']->getParent() !== $secondary['c3']->getParent(), 'primary->c1 and secondary->c3 have two distinct fathers');
+
+    $t->is($primary->render(), '<ul class="menu"><li class="first">c1<ul class="menu_level_1"><li class="first">gc1</li><li class="last">gc2</li></ul></li><li class="last">c2</li></ul>', 'proper rendering of primary after slice');
+    $t->is($secondary->render(), '<ul class="menu"><li class="first">c3</li><li class="last">c4</li></ul>', 'proper rendering of secondary after slice');
 
 // used for benchmarking
 $timer->addTime();
