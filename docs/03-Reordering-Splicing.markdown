@@ -1,4 +1,4 @@
-Reordering and splicing menus
+Reordering and slicing menus
 =============================
 
 Once you have a menu tree, there are many options available to reorder
@@ -29,12 +29,12 @@ Reordering the children is easy:
     $menu['ch3']->moveToLastPosition();
 
     // change order to ch1, ch2, ch3
-    $menu['ch2']->moveToPosition(2);
+    $menu['ch2']->moveToPosition(1);
 
-    // chnage order to ch2, ch3, ch1
-    $menu->moveChildToPosition($menu['ch1'], 3);
+    // change order to ch2, ch3, ch1
+    $menu->moveChildToPosition($menu['ch1'], 2);
 
->When reordering the menus, the position begins with the integer `1`.
+>When reordering the menus, the position begins with the integer `0`.
 
 Slicing menus
 --------------

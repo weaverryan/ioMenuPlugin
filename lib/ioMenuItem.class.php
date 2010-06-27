@@ -486,7 +486,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $child->setParent($this);
     $child->showChildren($this->showChildren());
     $child->setCurrentUri($this->getCurrentUri());
-    $child->setNum($this->count() + 1);
+    $child->setNum($this->count());
 
     $this->_children[$child->getName()] = $child;
 
@@ -540,7 +540,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
     $order = array_values($order);
 
-    array_splice($order, $position - 1, 0, $name);
+    array_splice($order, $position, 0, $name);
     $this->reorderChildren($order);
   }
 
@@ -549,7 +549,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function moveToFirstPosition()
   {
-    $this->moveToPosition(1);
+    $this->moveToPosition(0);
   }
 
   /**
@@ -642,7 +642,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     else
     {
       $child = ($offset instanceof ioMenuItem) ? $offset : $this->getChild($offset, false);
-      $offset = ($child) ? $child->getNum() - 1 : 0;
+      $offset = ($child) ? $child->getNum() : 0;
       $from = ($child) ? $child->getName() : "";
     }
 
@@ -723,7 +723,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
         $length = $this->getChild($length, false);
       }
 
-      $length = ($length != null) ? $length->getNum() : $count;
+      $length = ($length != null) ? $length->getNum() + 1 : $count;
     }
 
     $ret = array();
@@ -942,7 +942,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   protected function _resetChildrenNum()
   {
-    $i = 1;
+    $i = 0;
     foreach ($this->_children as $child)
     {
       $child->setNum($i++);
@@ -1408,7 +1408,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       return false;
     }
 
-    return $this->getNum() == $this->getParent()->count() ? true : false;
+    return $this->getNum() == $this->getParent()->count() - 1 ? true : false;
   }
 
   /**
@@ -1422,7 +1422,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       return false;
     }
 
-    return ($this->getNum() == 1);
+    return ($this->getNum() == 0);
   }
 
   /**

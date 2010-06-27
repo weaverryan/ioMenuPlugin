@@ -130,9 +130,9 @@ $t->info('2 - Test the construction of trees');
   $t->is($pt2->isLast(), true, '->isLast() return true for pt2.');
   $t->is($ch4->isFirst(), true, '->isFirst() returns true for ch4.');
   $t->is($ch4->isLast(), true, '->isLast() returns true for ch4.');
-  $t->is($ch1->getNum(), 1, '->getNum() on ch1 is 1');
-  $t->is($ch2->getNum(), 2, '->getNum() on ch2 is 2');
-  $t->is($ch3->getNum(), 3, '->getNum() on ch3 is 3');
+  $t->is($ch1->getNum(), 0, '->getNum() on ch1 is 0');
+  $t->is($ch2->getNum(), 1, '->getNum() on ch2 is 1');
+  $t->is($ch3->getNum(), 2, '->getNum() on ch3 is 2');
 
   // array access
   $t->info('  2.3 - Test ArrayAccess interface');
@@ -238,8 +238,8 @@ $t->info('3 - Test child-related functionality.');
     $t->is(count($ch4), 2, 'count(ch4) now returns only 2 children.');
     $t->is($ch4->getChild('Grandchild 1')->isFirst(), true, '->isFirst() on gc1 correctly returns true.');
     $t->is($ch4->getChild('gc3')->isLast(), true, '->isLast() on gc3 now returns true');
-    $t->is($gc1->getNum(), 1, '->getNum() on gc1 returns 1');
-    $t->is($ch4->getChild('gc3')->getNum(), 2, '->getNum() on gc3 returns 2');
+    $t->is($gc1->getNum(), 0, '->getNum() on gc1 returns 0');
+    $t->is($ch4->getChild('gc3')->getNum(), 1, '->getNum() on gc3 returns 1');
 
   $t->info('    c) ch4 now has 2 children (gc1, gc3). Remove gc3.');
     $ch4->removeChild('gc3');
@@ -677,7 +677,7 @@ $t->info('9 - Test i18n functionaliy.');
     $arr = array_keys($menu->getChildren());
     $t->is($arr, array('c3', 'c1', 'c4', 'c2'), 'c2 moved to last position');
 
-    $menu['c1']->moveToPosition(3);
+    $menu['c1']->moveToPosition(2);
     $arr = array_keys($menu->getChildren());
     $t->is($arr, array('c3', 'c4', 'c1', 'c2'), 'c1 moved to 3rd position');
 
