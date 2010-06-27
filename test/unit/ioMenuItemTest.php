@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(256);
+$t = new lime_test(257);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -21,7 +21,7 @@ class ioMenuItemTest extends ioMenuItem
     $this->_userAccess = null;
   }
 }
-  
+
 $t->info('1 - Test basic getters, setters and constructor');
   $menu = new ioMenuItem('test menu', '@homepage', array('title' => 'my menu'));
 
@@ -254,6 +254,7 @@ $t->info('3 - Test child-related functionality.');
   $t->info('  3.5 - Test updating child id after rename');
   $pt1->setName("Temp name");
   $t->is($menu->getChild("Temp name", false), $pt1, "pt1 can be found under new name");
+  $t->is(array_keys($menu->getChildren()), array('Temp name', 'Parent 2'), 'The children are still ordered correctly after a rename.');
 
   $pt1->setName("Parent 1");
   $t->is($menu->getChild("Parent 1", false), $pt1, "pt1 can be found again under old name");
@@ -367,7 +368,7 @@ $t->info('5 - Check the "current" behavior.');
   $t->is($currentMenu['child']['grandchild']->isCurrent(), true, '->isCurrent() properly returns true on the grandchild menu item.');
   $t->is($currentMenu->isCurrentAncestor(), true, '->isCurrentAncestor() returns true on the root since its grandchild is current.');
   $t->is($currentMenu['child']->isCurrentAncestor(), true, '->isCurrentAncestor() returns true on the child since its child is current.');
-  
+
 
 $t->info('6 - Test the url, link, label rendering');
   check_test_tree($t, $menu);
@@ -660,7 +661,7 @@ $t->info('9 - Test i18n functionaliy.');
     $menu = new ioMenuItem('root');
     $arr = $menu->toArray();
     $t->is(isset($arr['i18n_labels']), false, 'If no i18n labels are set, the key is hidden entirely from ->toarray().');
-    
+
   $t->info('10 - Test item reordering.');
     $menu = new ioMenuItem('root');
     $menu->addChild('c1');
@@ -692,7 +693,7 @@ extract(create_test_tree($t, 'ioMenuItemTest'));
   $t->info('10 - Test copy');
     check_test_tree($t, $menu);
     print_test_tree($t); // print the test tree
-    
+
     $menu2 = $menu->copy();
     $t->ok($menu2 !== $menu, 'menu2 is another instance then menu');
     $t->ok($menu2['Parent 1'] !== $menu['Parent 1'], 'menu2->pt1 is another instance than menu->pt1');
