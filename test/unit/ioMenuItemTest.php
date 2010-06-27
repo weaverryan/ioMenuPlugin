@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(253);
+$t = new lime_test(256);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -250,6 +250,25 @@ $t->info('3 - Test child-related functionality.');
   $t->info('    d) try to remove a non-existent child.');
     $ch4->removeChild('fake');
     $t->is(count($ch4), 1, '->removeChildren() with a non-existent child does nothing');
+
+  $t->info('  3.5 - Test updating child id after rename');
+  $pt1->setName("Temp name");
+  $t->is($menu->getChild("Temp name", false), $pt1, "pt1 can be found under new name");
+
+  $pt1->setName("Parent 1");
+  $t->is($menu->getChild("Parent 1", false), $pt1, "pt1 can be found again under old name");
+
+  $t->info('    Trying renaming Parent 1 to Parent 2 (which already is used by sibling), should throw an exception.');
+    try
+    {
+      $pt1->setName("Parent 2");
+      $t->fail('Exception not thrown.');
+    }
+    catch (sfException $e)
+    {
+      $t->pass('Exception thrown');
+    }
+
 
 $t->info('4 - Check the credentials and security functions.');
 

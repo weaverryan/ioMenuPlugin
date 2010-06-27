@@ -138,9 +138,46 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function setName($name)
   {
+    if ($this->_name == $name)
+    {
+      return $this;
+    }
+
+    if ($this->getParent() && $this->getParent()->getChild($name, false))
+    {
+      throw new sfException('Cannot rename item, name is already used by sibling.');
+    }
+
+    $oldName = $this->_name;
     $this->_name = $name;
 
+    if ($this->getParent())
+    {
+      $this->getParent()->updateChildId($this, $oldName);
+    }
+
     return $this;
+  }
+
+  /**
+   * Updates id for child based on new name.
+   *
+   * Used internally after renaming item which has parent.
+   *
+   * @param ioMenuItem $child Item whose name has been changed.
+   * @param string $oldName Old (previous) name of item.
+   *
+   */
+  protected function updateChildId(ioMenuItem $child, $oldName)
+  {
+    $names = array_keys($this->getChildren());
+    $items = array_values($this->getChildren());
+
+    $offset = array_search($oldName, $names);
+    $names[$offset] = $child->getName();
+
+    $children = array_combine($names, $items);
+    $this->setChildren($children);
   }
 
   /**
