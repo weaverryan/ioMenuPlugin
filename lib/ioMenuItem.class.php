@@ -12,7 +12,7 @@
  * @author      Ryan Weaver <ryan@thatsquality.com>
  * @version     svn:$Id$ $Author$
  */
-class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
+class ioMenuItem extends ioTreeItem
 {
   /**
    * Whether or not to render menus with pretty spacing, or fully compressed.
@@ -28,7 +28,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * Properties on this menu item
    */
   protected
-    $_name             = null,    // the name of this menu item (used for id by parent menu)
     $_label            = null,    // the label to output, name is used by default
     $_route            = null,    // the route or url to use in the anchor tag
     $_attributes       = array(), // an array of attributes for the li
@@ -56,9 +55,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    * Metadata on this menu item
    */
   protected
-    $_children         = array(), // an array of ioMenuItem children
-    $_num              = null,    // the order number this menu is in its parent
-    $_parent           = null,    // parent ioMenuItem
     $_isCurrent        = null,    // whether or not this menu item is current
     $_userAccess       = null,    // whether or not the current user can access this item
     $_currentUri       = null;    // the current uri to use for selecting current menu
@@ -74,9 +70,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function __construct($name, $route = null, $attributes = array())
   {
+    parent::__construct($name);
+
     sfApplicationConfiguration::getActive()->loadHelpers(array('Tag', 'Url'));
 
-    $this->_name = $name;
     $this->_route = $route;
     $this->_attributes = $attributes;
     if (self::$_renderer == null)
@@ -151,62 +148,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 
       return $this->getRoute();
     }
-  }
-
-  /**
-   * @return string
-   */
-  public function getName()
-  {
-    return $this->_name;
-  }
-
-  /**
-   * @param  string $name
-   * @return ioMenuItem
-   */
-  public function setName($name)
-  {
-    if ($this->_name == $name)
-    {
-      return $this;
-    }
-
-    if ($this->getParent() && $this->getParent()->getChild($name, false))
-    {
-      throw new sfException('Cannot rename item, name is already used by sibling.');
-    }
-
-    $oldName = $this->_name;
-    $this->_name = $name;
-
-    if ($this->getParent())
-    {
-      $this->getParent()->updateChildId($this, $oldName);
-    }
-
-    return $this;
-  }
-
-  /**
-   * Updates id for child based on new name.
-   *
-   * Used internally after renaming item which has parent.
-   *
-   * @param ioMenuItem $child Item whose name has been changed.
-   * @param string $oldName Old (previous) name of item.
-   *
-   */
-  protected function updateChildId(ioMenuItem $child, $oldName)
-  {
-    $names = array_keys($this->getChildren());
-    $items = array_values($this->getChildren());
-
-    $offset = array_search($oldName, $names);
-    $names[$offset] = $child->getName();
-
-    $children = array_combine($names, $items);
-    $this->setChildren($children);
   }
 
   /**
@@ -507,17 +448,10 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     {
       $child = $this->_createChild($child, $route, $attributes, $class);
     }
-    elseif ($child->getParent())
-    {
-      throw new sfException('Cannot add menu item as child, it already belongs to another menu (e.g. has a parent).');
-    }
 
-    $child->setParent($this);
-    $child->showChildren($this->showChildren());
+    parent::addChild($child);
+
     $child->setCurrentUri($this->getCurrentUri());
-    $child->setNum($this->count());
-
-    $this->_children[$child->getName()] = $child;
 
     return $child;
   }
@@ -534,232 +468,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function getChild($name, $create = true)
   {
-    if (!isset($this->_children[$name]) && $create)
+    if (parent::getChild($name) == null && $create)
     {
       $this->addChild($name);
     }
 
-    return isset($this->_children[$name]) ? $this->_children[$name] : null;
-  }
-
-  /**
-   * Moves child to specified position. Rearange other children accordingly.
-   *
-   * @param numeric $position Position to move child to.
-   *
-   */
-  public function moveToPosition($position)
-  {
-    $this->getParent()->moveChildToPosition($this, $position);
-  }
-
-  /**
-   * Moves child to specified position. Rearange other children accordingly.
-   *
-   * @param ioMenuItem $child Child to move.
-   * @param numeric $position Position to move child to.
-   */
-  public function moveChildToPosition(ioMenuItem $child, $position)
-  {
-    $name = $child->getName();
-    $order = array_keys($this->_children);
-
-    $oldPosition = array_search($name, $order);
-    unset($order[$oldPosition]);
-
-    $order = array_values($order);
-
-    array_splice($order, $position, 0, $name);
-    $this->reorderChildren($order);
-  }
-
-  /**
-   * Moves child to first position. Rearange other children accordingly.
-   */
-  public function moveToFirstPosition()
-  {
-    $this->moveToPosition(0);
-  }
-
-  /**
-   * Moves child to last position. Rearange other children accordingly.
-   */
-  public function moveToLastPosition()
-  {
-    $this->moveToPosition($this->getParent()->count());
-  }
-
-  /**
-   * Reorder children.
-   *
-   * @param array $order New order of children.
-   */
-  public function reorderChildren($order)
-  {
-    if (count($order) != $this->count())
-    {
-      throw new sfException('Cannot reorder children, order does not contain all children.');
-    }
-
-    $newChildren = array();
-
-    foreach($order as $name)
-    {
-      if (!isset($this->_children[$name]))
-      {
-        throw new sfException('Cannot find children named '.$name);
-      }
-
-      $child = $this->_children[$name];
-      $newChildren[$name] = $child;
-    }
-
-    $this->_children = $newChildren;
-    $this->_resetChildrenNum();
-  }
-
-  /**
-   * Makes a deep copy of menu tree. Every item is copied as another object.
-   *
-   * @return ioMenuItem
-   *
-   */
-  public function copy()
-  {
-    $newMenu = clone $this;
-    $newMenu->_children = array();
-    $newMenu->setParent(null);
-    foreach($this->getChildren() as $child)
-    {
-      $newMenu->addChild($child->copy());
-    }
-
-    return $newMenu;
-  }
-
-  /**
-   * Get slice of menu as another menu.
-   *
-   * If offset and/or length are numeric, it works like in array_slice function:
-   *
-   *   If offset is non-negative, slice will start at the offset.
-   *   If offset is negative, slice will start that far from the end.
-   *
-   *   If length is zero, slice will have all elements.
-   *   If length is positive, slice will have that many elements.
-   *   If length is negative, slice will stop that far from the end.
-   *
-   * It's possible to mix names/object/numeric, for example:
-   *   slice("child1", 2);
-   *   slice(3, $child5);
-   *
-   * @param mixed $offset Name of child, child object, or numeric offset.
-   * @param mixed $length Name of child, child object, or numeric length.
-   * @return ioMenuItem Slice of menu.
-   *
-   */
-  public function slice($offset, $length = 0)
-  {
-    $count = $this->count();
-    
-    $names = array_keys($this->getChildren());
-    if (is_numeric($offset))
-    {
-      $offset = ($offset >= 0) ? $offset : $count + $offset;
-      $from = (isset($names[$offset])) ? $names[$offset] : "";
-    }
-    else
-    {
-      $child = ($offset instanceof ioMenuItem) ? $offset : $this->getChild($offset, false);
-      $offset = ($child) ? $child->getNum() : 0;
-      $from = ($child) ? $child->getName() : "";
-    }
-
-    if (is_numeric($length))
-    {
-      if ($length == 0)
-      {
-        $offset2 = $count - 1;
-      }
-      else
-      {
-        $offset2 = ($length > 0) ? $offset + $length - 1 : $count - 1 + $length;
-      }
-      $to = (isset($names[$offset2])) ? $names[$offset2] : "";
-    }
-    else
-    {
-      $to = ($length instanceof ioMenuItem) ? $length->getName() : $length;
-    }
-
-    return $this->_sliceFromTo($from, $to);
-  }
-
-  /**
-   * Get slice of menu as another menu.
-   *
-   * Internal method.
-   *
-   * @param string $offset Name of child.
-   * @param string $length Name of child.
-   * @return ioMenuItem
-   *
-   */
-  private function _sliceFromTo($from, $to)
-  {
-    $newMenu = $this->copy();
-    $newChildren = array();
-
-    $copy = false;
-    foreach($newMenu->getChildren() as $child)
-    {
-      if ($child->getName() == $from)
-      {
-        $copy = true;
-      }
-
-      if ($copy == true)
-      {
-        $newChildren[$child->getName()] = $child;
-      }
-
-      if ($child->getName() == $to)
-      {
-        break;
-      }
-    }
-
-    $newMenu->setChildren($newChildren);
-    $newMenu->_resetChildrenNum();
-
-    return $newMenu;
-  }
-
-  /**
-   * Split menu into two distinct menus.
-   * 
-   * @param mixed $length Name of child, child object, or numeric length.
-   * @return array Array with two menus, with "primary" and "secondary" key
-   */
-  public function split($length)
-  {
-    $count = $this->count();
-
-    if (!is_numeric ($length))
-    {
-      if (!($length instanceof ioMenuItem))
-      {
-        $length = $this->getChild($length, false);
-      }
-
-      $length = ($length != null) ? $length->getNum() + 1 : $count;
-    }
-
-    $ret = array();
-    $ret['primary'] = $this->slice(0, $length);
-    $ret['secondary'] = $this->slice($length);
-
-    return $ret;
+    return parent::getChild($name);
   }
 
   /**
@@ -818,88 +532,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
-   * Returns the level of this menu item
-   *
-   * The root menu item is 0, followed by 1, 2, etc
-   *
-   * @return integer
-   */
-  public function getLevel()
-  {
-    $count = -1;
-    $obj = $this;
-
-    do {
-      $count++;
-    } while ($obj = $obj->getParent());
-
-    return $count;
-  }
-
-  /**
-   * Returns the root ioMenuItem of this menu tree
-   *
-   * @return ioMenuItem
-   */
-  public function getRoot()
-  {
-    $obj = $this;
-    do {
-        $found = $obj;
-    } while ($obj = $obj->getParent());
-
-    return $found;
-  }
-
-  /**
-   * Returns whether or not this menu item is the root menu item
-   *
-   * @return bool
-   */
-  public function isRoot()
-  {
-    return (bool) !$this->getParent();
-  }
-
-  /**
-   * @return ioMenuItem|null
-   */
-  public function getParent()
-  {
-    return $this->_parent;
-  }
-
-  /**
-   * Used internally when adding and removing children
-   *
-   * @param ioMenuItem $parent
-   * @return ioMenuItem
-   */
-  public function setParent(ioMenuItem $parent = null)
-  {
-    return $this->_parent = $parent;
-  }
-
-  /**
-   * @return array of ioMenuItem objects
-   */
-  public function getChildren()
-  {
-    return $this->_children;
-  }
-
-  /**
-   * @param  array $children An array of ioMenuItem objects
-   * @return ioMenuItem
-   */
-  public function setChildren(array $children)
-  {
-    $this->_children = $children;
-
-    return $this;
-  }
-
-  /**
    * Sets the array of options to use when running url_for()
    *
    * @param  array $options The array of options to set
@@ -937,47 +569,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $this->_linkOptions = $linkOptions;
   }
   
-
-  /**
-   * Returns the index that this child is within its parent.
-   *
-   * Primarily used internally to calculate first and last
-   *
-   * @return integer
-   */
-  public function getNum()
-  {
-    return $this->_num;
-  }
-
-  /**
-   * Sets the index that this child is within its parent.
-   *
-   * Primarily used internally to calculate first and last
-   *
-   * @return void
-   */
-  public function setNum($num)
-  {
-    $this->_num = $num;
-  }
-
-  /**
-   * Reset children nums.
-   *
-   * Primarily called after changes to children (removing, reordering, etc)
-   * 
-   * @return void
-   */
-  protected function _resetChildrenNum()
-  {
-    $i = 0;
-    foreach ($this->_children as $child)
-    {
-      $child->setNum($i++);
-    }
-  }
-
   /**
    * Creates a new ioMenuItem to be the child of this menu
    * 
@@ -995,42 +586,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     }
 
     return new $class($name, $route, $attributes);
-  }
-
-  /**
-   * Removes a child from this menu item
-   * 
-   * @param mixed $name The name of ioMenuItem instance to remove
-   */
-  public function removeChild($name)
-  {
-    $name = ($name instanceof ioMenuItem) ? $name->getName() : $name;
-    
-    if (isset($this->_children[$name]))
-    {
-      // unset the child and reset it so it looks independent
-      $this->_children[$name]->setParent(null);
-      $this->_children[$name]->setNum(null);
-      unset($this->_children[$name]);
-
-      $this->_resetChildrenNum();
-    }
-  }
-
-  /**
-   * @return ioMenuItem
-   */
-  public function getFirstChild()
-  {
-    return reset($this->_children);
-  }
-
-  /**
-   * @return ioMenuItem
-   */
-  public function getLastChild()
-  {
-    return end($this->_children);
   }
 
   /**
@@ -1280,34 +835,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     }
 
     return false;
-  }
-
-  /**
-   * @return bool Whether or not this menu item is last in its parent
-   */
-  public function isLast()
-  {
-    // if this is root, then return false
-    if ($this->isRoot())
-    {
-      return false;
-    }
-
-    return $this->getNum() == $this->getParent()->count() - 1 ? true : false;
-  }
-
-  /**
-   * @return bool Whether or not this menu item is first in its parent 
-   */
-  public function isFirst()
-  {
-    // if this is root, then return false
-    if ($this->isRoot())
-    {
-      return false;
-    }
-
-    return ($this->getNum() == 0);
   }
 
   /**
@@ -1607,54 +1134,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   protected function _isOldRouteMethod()
   {
     return ('@' == substr($this->getRoute(), 0, 1) || false !== strpos($this->getRoute(), '/'));
-  }
-
-  /**
-   * Implements Countable
-   */
-  public function count()
-  {
-    return count($this->_children);
-  }
-
-  /**
-   * Implements IteratorAggregate
-   */
-  public function getIterator()
-  {
-    return new ArrayObject($this->_children);
-  }
-
-  /**
-   * Implements ArrayAccess
-   */
-  public function offsetExists($name)
-  {
-    return isset($this->_children[$name]);
-  }
-
-  /**
-   * Implements ArrayAccess
-   */
-  public function offsetGet($name)
-  {
-    return $this->getChild($name, false);
-  }
-
-  /**
-   * Implements ArrayAccess
-   */
-  public function offsetSet($name, $value)
-  {
-    return $this->addChild($name)->setLabel($value);
-  }
-
-  /**
-   * Implements ArrayAccess
-   */
-  public function offsetUnset($name)
-  {
-    $this->removeChild($name);
   }
 
   /**
