@@ -22,6 +22,14 @@ class ioMenuItemTest extends ioMenuItem
   }
 }
 
+class ioMenuItemTestRenderer implements ioMenuItemRenderer
+{
+  public function render(ioMenuItem $item, $depth = null)
+  {
+    return "Test renderer";
+  }
+}
+
 $t->info('1 - Test basic getters, setters and constructor');
   $menu = new ioMenuItem('test menu', '@homepage', array('title' => 'my menu'));
 
@@ -616,6 +624,12 @@ $t->info('8 - Test the render() method.');
   $menu['Parent 1']->showChildren(false);
   $rendered = '<ul class="root"><li class="first">Parent 1</li><li class="parent2_class last" title="parent2 title">Parent 2<ul class="menu_level_1"><li class="first last">Child 4</li></ul></li></ul>';
   $t->is($menu->render(2), $rendered, 'Displays ch4 and not gc1 because depth = 2. Hides ch1-3 because showChildren() is false on pt1.');
+
+  $t->info('  8.8 - Test custom renderer');
+  ioMenuItem::setRenderer(new ioMenuItemTestRenderer());
+  $t->is($menu->render(), "Test renderer", 'The full menu renders correctly.');
+  $t->is((string) $menu, "Test renderer", 'The __toString() method renders correctly.');
+  ioMenuItem::setRenderer(new ioMenuItemListRenderer());
 
 $t->info('9 - Test i18n functionaliy.');
   $menu = new ioMenuItem('i18n');

@@ -20,6 +20,11 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public static $renderCompressed = false;
 
   /**
+   * Renderer which is used to render menu items.
+   */
+  protected static $_renderer = null;
+
+  /**
    * Properties on this menu item
    */
   protected
@@ -74,6 +79,30 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $this->_name = $name;
     $this->_route = $route;
     $this->_attributes = $attributes;
+    if (self::$_renderer == null)
+    {
+      self::$_renderer = new ioMenuItemListRenderer();
+    }
+  }
+
+  /**
+   * Sets renderer which will be used to render menu items.
+   *
+   * @param ioMenuItemRenderer $renderer Renderer.
+   */
+  static public function setRenderer(ioMenuItemRenderer $renderer)
+  {
+    self::$_renderer = $renderer;
+  }
+
+  /**
+   * Gets renderer which is used to render menu items.
+   *
+   * @return ioMenuItemRenderer $renderer Renderer.
+   */
+  static public function getRenderer()
+  {
+    return self::$_renderer;
   }
 
   /**
@@ -1026,54 +1055,21 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   }
 
   /**
-   * Renders a ul tag and any children inside li tags.
+   * Renders menu tree.
    *
    * Depth values corresppond to:
    *   * 0 - no children displayed at all (would return a blank string)
    *   * 1 - directly children only
    *   * 2 - children and grandchildren
    *
-   * @param integer $depth         The depth of children to render 
-   * @param boolean $renderAsChild Used internally to render with attributes on the write element
-   * 
+   * @param ioMenuItem  $item         Menu item
+   * @param integer     $depth        The depth of children to render
+   *
    * @return string
    */
-  public function render($depth = null, $renderAsChild = false)
+  public function render($depth = null)
   {
-    /**
-     * Return an empty string if any of the following are true:
-     *   a) The menu has no children eligible to be displayed
-     *   b) The depth is 0
-     *   c) This menu item has been explicitly set to hide its children
-     */
-    if (!$this->hasChildren() || $depth === 0 || !$this->showChildren())
-    {
-      return;
-    }
-
-    if ($renderAsChild)
-    {
-      $attributes = array('class' => 'menu_level_'.$this->getLevel());
-    }
-    else
-    {
-      $attributes = $this->getAttributes();
-
-      // give the top ul a class of "menu" of none specified
-      if (!isset($attributes['class']))
-      {
-        $attributes['class'] = 'menu';
-      }
-    }
-
-    // render children with a depth - 1
-    $childDepth = ($depth === null) ? null : ($depth - 1);
-
-    $html = $this->_format('<ul'._tag_options($attributes).'>', 'ul');
-    $html .= $this->renderChildren($childDepth);
-    $html .= $this->_format('</ul>', 'ul');
-
-    return $html;
+    return self::getRenderer()->render($this, $depth);
   }
 
   /**
@@ -1082,117 +1078,6 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
   public function __toString()
   {
     return $this->render();
-  }
-
-  /**
-   * Renders all of the children of this menu.
-   *
-   * This calls ->renderChild() on each menu item, which instructs each
-   * menu item to render themselves as an <li> tag (with nested ul if it
-   * has children).
-   *
-   * @param integer $depth The depth each child should render
-   * @return string
-   */
-  public function renderChildren($depth = null)
-  {  
-    $html = '';
-    foreach ($this->_children as $child)
-    {
-      $html .= $child->renderChild($depth);
-    }
-    return $html;
-  }
-
-  /**
-   * Called by the parent menu item to render this menu.
-   *
-   * This renders the li tag to fit into the parent ul as well as its
-   * own nested ul tag if this menu item has children
-   *
-   * @param integer $depth The depth each child should render
-   * @return string
-   */
-  public function renderChild($depth = null)
-  {
-    // if we don't have access or this item is marked to not be shown
-    if (!$this->shouldBeRendered())
-    {
-      return; 
-    }
-
-    // explode the class string into an array of classes
-    $class = ($this->getAttribute('class')) ? explode(' ', $this->getAttribute('class')) : array();
-
-    if ($this->isCurrent())
-    {
-      $class[] = 'current';
-    }
-    elseif ($this->isCurrentAncestor($depth))
-    {
-      $class[] = 'current_ancestor';
-    }
-
-    if ($this->actsLikeFirst())
-    {
-      $class[] = 'first';
-    }
-    if ($this->actsLikeLast())
-    {
-      $class[] = 'last';
-    }
-
-    // retrieve the attributes and put the final class string back on it
-    $attributes = $this->getAttributes();
-    if (count($class) > 0)
-    {
-      $attributes['class'] = implode(' ', $class);
-    }
-
-    // opening li tag
-    $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
-
-    // render the text/link inside the li tag
-    $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
-
-    // renders the embedded ul if there are visible children
-    $html .= $this->render($depth, true);
-
-    // closing li tag
-    $html .= $this->_format('</li>', 'li');
-
-    return $html;
-  }
-
-  /**
-   * If self::$renderCompressed is on, this will apply the necessary
-   * spacing and line-breaking so that the particular thing being rendered
-   * makes up its part in a fully-rendered and spaced menu.
-   *
-   * @param  string $html The html to render in an (un)formatted way
-   * @param  string $type The type [ul,link,li] of thing being rendered 
-   * @return string
-   */
-  protected function _format($html, $type)
-  {
-    if (self::$renderCompressed)
-    {
-      return $html;
-    }
-
-    switch ($type)
-    {
-      case 'ul':
-      case 'link':
-        $spacing = $this->getLevel() * 4;
-        break;
-
-      case 'li':
-        $spacing = $this->getLevel() * 4 - 2;
-        break;
-    }
-
-    return str_repeat(' ', $spacing).$html."\n";
   }
 
   /**
