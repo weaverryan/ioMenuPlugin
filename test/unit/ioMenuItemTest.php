@@ -4,7 +4,7 @@ require_once dirname(__FILE__).'/../bootstrap/functional.php';
 require_once $_SERVER['SYMFONY'].'/vendor/lime/lime.php';
 require_once sfConfig::get('sf_lib_dir').'/test/unitHelper.php';
 
-$t = new lime_test(259);
+$t = new lime_test(253);
 
 $timer = new sfTimer();
 // stub class used for testing
@@ -33,11 +33,7 @@ class ioMenuItemTestRenderer implements ioMenuItemRenderer
 $t->info('1 - Test basic getters, setters and constructor');
   $menu = new ioMenuItem('test menu', '@homepage', array('title' => 'my menu'));
 
-  $t->is($menu->getName(), 'test menu', '->getName() returns the given name.');
-  $menu->setName('new menu name');
-  $t->is($menu->getName(), 'new menu name', '->setName() sets the name correctly.');
-
-  $t->is($menu->getLabel(), 'new menu name', '->getLabel() returns the name if the label does not exist.');
+  $t->is($menu->getLabel(), 'test menu', '->getLabel() returns the name if the label does not exist.');
   $menu->setLabel('menu label');
   $t->is($menu->getLabel(), 'menu label', 'Once set, ->getLabel() returns the actual label.');
 
@@ -68,17 +64,6 @@ $t->info('1 - Test basic getters, setters and constructor');
   $t->is($menu->showChildren(), true, '->showChildren() return true by default.');
   $menu->showChildren(false);
   $t->is($menu->showChildren(), false, '->showChildren() with an argument properly sets the property.');
-
-  $childMenu = new ioMenuItem('child');
-  $childMenu->setParent($menu);
-  $t->is($childMenu->getParent(), $menu, '->setParent() sets the parent menu item.');
-
-  $t->is(count($menu->getChildren()), 0, '->getChildren() returns no children to start.');
-  $menu->setChildren(array($childMenu));
-  $t->is($menu->getChildren(), array($childMenu), '->getChildren() returns the proper children array.');
-
-  $menu->setNum(5);
-  $t->is($menu->getNum(), 5, '->setNum() sets the num property.');
 
 
 $t->info('### Creating the test tree.');
