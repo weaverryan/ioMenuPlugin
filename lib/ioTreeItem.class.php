@@ -3,7 +3,7 @@
 /**
  * Implements tree item.
  *
- * Tree item is an object which has name and contains childrens.
+ * Tree item is an object which has a name and contains children.
  *
  * Originally taken from sympal (http://www.sympalphp.org)
  *
@@ -36,7 +36,7 @@ class ioTreeItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function __construct($name)
   {
-      $this->_name = $name;
+    $this->_name = $name;
   }
 
   /**
