@@ -610,14 +610,13 @@ class ioMenuItem extends ioTreeItem
   }
 
   /**
-   * Renders menu tree.
+   * Renders the menu tree by using the statically set renderer.
    *
    * Depth values corresppond to:
    *   * 0 - no children displayed at all (would return a blank string)
    *   * 1 - directly children only
    *   * 2 - children and grandchildren
    *
-   * @param ioMenuItem  $item         Menu item
    * @param integer     $depth        The depth of children to render
    *
    * @return string
