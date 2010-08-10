@@ -631,7 +631,7 @@ class ioMenuItem extends ioTreeItem
    */
   public function __toString()
   {
-    return $this->render();
+    return (string) $this->render();
   }
 
   /**
