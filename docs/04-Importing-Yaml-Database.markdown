@@ -16,33 +16,33 @@ to create entire menu trees from an array input. This makes specifying
 menus in YAML extremely easy. Suppose we want to specify an admin menu
 in `app.yml`:
 
-  all:
-    menus:
-      admin_menu:
-        root:
-          name:     Admin menu
-          children:
-            signin:
-              label:   Sign in
-              route:   @sf_guard_signin
-              requires_no_auth: true
-              attributes: {class: signin }
-            signout:
-              label:   Sign out
-              route:   @sf_guard_signout
-              requires_auth: true
-            user_admin:
-              label:          User Admin
-              requires_auth: true
-              children:
-                manage_users:
-                  label:   Manage Users
-                  route:   @sf_guard_user
-                  credentials: [ManageUsers]
-                manage_permissions:
-                  label:   Manage Permissions
-                  route:   @sf_guard_permission
-                  credentials: [ManagePermissions]
+    all:
+      menus:
+        admin_menu:
+          root:
+            name:     Admin menu
+            children:
+              signin:
+                label:   Sign in
+                route:   @sf_guard_signin
+                requires_no_auth: true
+                attributes: {class: signin }
+              signout:
+                label:   Sign out
+                route:   @sf_guard_signout
+                requires_auth: true
+              user_admin:
+                label:          User Admin
+                requires_auth: true
+                children:
+                  manage_users:
+                    label:   Manage Users
+                    route:   @sf_guard_user
+                    credentials: [ManageUsers]
+                  manage_permissions:
+                    label:   Manage Permissions
+                    route:   @sf_guard_permission
+                    credentials: [ManagePermissions]
 
 Creating and rendering a menu item from this object is easy:
 
