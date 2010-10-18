@@ -131,5 +131,5 @@ Draggable, sortable admin interface
 -----------------------------------
 
 Another perk of the `ioDoctrineMenuPlugin` is that it comes packaged with
-an admin interface where the admin user can easilyreorder and reorganize the
+an admin interface where the admin user can easily reorder and reorganize the
 menus.
