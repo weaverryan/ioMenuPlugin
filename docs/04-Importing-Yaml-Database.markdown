@@ -16,10 +16,9 @@ to create entire menu trees from an array input. This makes specifying
 menus in YAML extremely easy. Suppose we want to specify an admin menu
 in `app.yml`:
 
-  all:
-    menus:
-      admin_menu:
-        root:
+    all:
+      menus:
+        admin_menu:
           name:     Admin menu
           children:
             signin:
@@ -132,5 +131,5 @@ Draggable, sortable admin interface
 -----------------------------------
 
 Another perk of the `ioDoctrineMenuPlugin` is that it comes packaged with
-an admin interface where the admin user can easilyreorder and reorganize the
+an admin interface where the admin user can easily reorder and reorganize the
 menus.

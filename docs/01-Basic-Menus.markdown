@@ -159,7 +159,7 @@ itself.
 To facilitate the creation of the root node, a special helper class, `ioMenu`
 was created:
 
-    $menu = new ioMenuItem(array('id' => 'root_menu');
+    $menu = new ioMenu(array('id' => 'root_menu');
     $menu->addChild('overview', '@homepage');
     $menu->addChild('comments', '@comments');
 

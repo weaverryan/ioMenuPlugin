@@ -472,6 +472,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
   $t->info('    a) Test ->toArray() on pt2');
   $menu['Parent 2']->isCurrent(true);
   $menu['Parent 2']->setAttribute('class', 'parent2');
+  $menu['Parent 2']->setLinkOptions(array('class' => 'anchor_class'));
   $t->is($menu['Parent 2']->toArray(), array(
     'name'              => 'Parent 2',
     'label'             => null,
@@ -480,6 +481,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
     'requires_auth'     => false,
     'requires_no_auth'  => false,
     'credentials'       => array(),
+    'link_options'      => array('class' => 'anchor_class'),
     'class'             => 'ioMenuItemTest',
     'children'          => array(
       'Child 4'           => array(
@@ -490,6 +492,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
         'requires_auth'     => false,
         'requires_no_auth'  => false,
         'credentials'       => array(),
+        'link_options'      => array(),
         'class'             => 'ioMenuItemTest',
         'children'          => array(
           'Grandchild 1'      => array(
@@ -500,6 +503,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
             'requires_auth'     => false,
             'requires_no_auth'  => false,
             'credentials'       => array(),
+            'link_options'      => array(),
             'class'             => 'ioMenuItemTest',
             'children'          => array(), // children exported even if empty, unless showChildren=false
           )
@@ -515,6 +519,7 @@ $t->info('7 - Test some "intangible" functions (e.g. callRecursively()).');
     'requires_auth'     => false,
     'requires_no_auth'  => false,
     'credentials'       => array(),
+    'link_options'      => array('class' => 'anchor_class'),
     'class'             => 'ioMenuItemTest',
   ), 'Test toArray() without children on pt2');
 
