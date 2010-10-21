@@ -83,7 +83,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function getUri(array $options = array())
   {
-    if (!$this->getRoute())
+    if (!$this->getRoute() || $this->getRoute() == '#')
     {
       return null;
     }
@@ -1153,7 +1153,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
     $html = $this->_format('<li'._tag_options($attributes).'>', 'li');
 
     // render the text/link inside the li tag
-    $html .= $this->_format($this->_route ? $this->renderLink() : $this->renderLabel(), 'link');
+    $html .= $this->_format((null !== $this->_route) ? $this->renderLink() : $this->renderLabel(), 'link');
 
     // renders the embedded ul if there are visible children
     $html .= $this->render($depth, true);
@@ -1205,9 +1205,21 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
    */
   public function renderLink()
   {
-    if (!$route = $this->getRoute())
+    if (null === ($route = $this->getRoute()))
     {
       return $this->renderLabel();
+    }
+
+    // allow for "fake" hrefs
+    if ($route == '' || $route == '#')
+    {
+      $params = array_merge($this->getUrlOptions(), $this->getLinkOptions());
+      if ($route)
+      {
+        $params['href'] = $route;
+      }
+
+      return content_tag('a', $this->renderLabel(), $params);
     }
 
     // Handling of the url options and link options varies depending on the url format
