@@ -1374,9 +1374,12 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       $menuUrl = $this->getUri(array('absolute' => true));
 
       // a very dirty hack so homepages will match with or without the trailing slash
-      if ($this->getRoute() == '@homepage' && substr($url, -1) != '/')
+      if ($this->getRoute() == '@homepage' || $this->getRoute() == 'homepage')
       {
-        $menuUrl = substr($menuUrl, 0, strlen($menuUrl) - 1);
+        if (substr($url, -1) != '/')
+        {
+          $menuUrl = substr($menuUrl, 0, strlen($menuUrl) - 1);
+        }
       }
 
       $this->_isCurrent = ($menuUrl == $url);
