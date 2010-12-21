@@ -1616,6 +1616,7 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       '_requiresNoAuth' => 'requires_no_auth',
       '_credentials'    => 'credentials',
       '_linkOptions'    => 'link_options',
+      '_urlOptions'     => 'url_options',
     );
 
     // output the i18n labels if any are set
@@ -1698,6 +1699,11 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
 		if (isset($array['link_options']))
 		{
 			$this->setLinkOptions($array['link_options']);
+		}
+
+		if (isset($array['url_options']))
+		{
+			$this->setUrlOptions($array['url_options']);
 		}
 
     if (isset($array['children']))
