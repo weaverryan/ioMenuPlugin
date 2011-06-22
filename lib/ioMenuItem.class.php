@@ -1550,7 +1550,8 @@ class ioMenuItem implements ArrayAccess, Countable, IteratorAggregate
       }
       else
       {
-        $this->setCurrentUri(sfContext::getInstance()->getRequest()->getUri());
+        $uri = explode('?', sfContext::getInstance()->getRequest()->getUri());
+        $this->setCurrentUri($uri[0]);
       }
     }
 
